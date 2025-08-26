@@ -37,6 +37,23 @@ Phase 3 — Polish & testing
 - [x] Add components: Layout, UploadArea, DocumentPreview, ChatPanel, InsightsPanel
 - [x] Add basic CSS
 - [x] Provide run instructions
+- [x] Add CHANGELOG.md with v0.0.1 entry
+```
+
+## Todo (Phase 2 - In Progress)
+```markdown
+- [x] Add API route for file upload (/api/upload) with formidable
+- [x] Add document parsing with pdf-parse and mammoth libraries
+- [x] Add API route for chat with Ollama integration (/api/chat)
+- [x] Add DocumentContext for state management
+- [x] Wire upload flow to POST files to API
+- [x] Wire chat panel to use real AI responses from Ollama
+- [x] Update document preview to show parsed content
+- [x] Update insights panel with extracted data
+- [x] Add empty state handling for workspace
+- [ ] Test end-to-end flow with sample documents
+- [ ] Add error handling improvements
+- [ ] Add accessibility tweaks and keyboard navigation tests
 ```
 
 ## Contract (small)

@@ -1,6 +1,7 @@
 import * as React from 'react'
 import Head from 'next/head'
 import { ThemeProvider } from '../src/context/ThemeContext'
+import { DocumentProvider } from '../src/context/DocumentContext'
 import CssBaseline from '@mui/material/CssBaseline'
 
 export default function App({ Component, pageProps }) {
@@ -11,8 +12,10 @@ export default function App({ Component, pageProps }) {
         <title>DocuMint</title>
       </Head>
       <ThemeProvider>
-        <CssBaseline />
-        <Component {...pageProps} />
+        <DocumentProvider>
+          <CssBaseline />
+          <Component {...pageProps} />
+        </DocumentProvider>
       </ThemeProvider>
     </>
   )
