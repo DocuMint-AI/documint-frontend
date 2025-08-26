@@ -8,11 +8,14 @@ import Alert from '@mui/material/Alert'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
 import { alpha } from '@mui/material/styles'
+import { useDocument } from '../context/DocumentContext'
 
-export default function UploadArea({ onUploadSuccess, uploading, setUploading }) {
+export default function UploadArea() {
   const fileRef = useRef()
   const [error, setError] = useState(null)
   const [dragActive, setDragActive] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const { updateDocument } = useDocument()
 
   const openFilePicker = () => fileRef.current && fileRef.current.click()
 
@@ -43,18 +46,29 @@ export default function UploadArea({ onUploadSuccess, uploading, setUploading })
       const formData = new FormData()
       formData.append('file', accepted[0])
 
+      console.log('Uploading file:', accepted[0].name)
       const response = await fetch('http://localhost:8000/upload', {
         method: 'POST',
         body: formData,
       })
 
+      console.log('Response status:', response.status)
+      console.log('Response headers:', response.headers)
+      
       const data = await response.json()
+      console.log('Response data:', data)
 
       if (!response.ok) {
-        throw new Error(data.error || 'Upload failed')
+        throw new Error(data.detail || 'Upload failed')
       }
 
-      onUploadSuccess(data)
+      console.log('Setting document with data:', data)
+      // Set document with extracted content
+      updateDocument({
+        filename: accepted[0].name,
+        preview: data.text,
+        uploadedAt: new Date().toISOString()
+      })
     } catch (err) {
       console.error('Upload error:', err)
       setError(err.message || 'Upload failed. Please try again.')

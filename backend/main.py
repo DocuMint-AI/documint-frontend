@@ -18,7 +18,7 @@ app = FastAPI(title="DocuMint API", version="1.0.0")
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,7 +29,7 @@ documents = {}
 
 class ChatRequest(BaseModel):
     message: str
-    document_id: Optional[str] = None
+    document_text: Optional[str] = None
 
 class ChatResponse(BaseModel):
     response: str
@@ -170,7 +170,7 @@ Format your response clearly with each section. Be concise and specific.
         summary=summary.strip() or "Document uploaded and analyzed successfully."
     )
 
-@app.post("/api/upload")
+@app.post("/upload")
 async def upload_document(file: UploadFile = File(...)):
     """Upload and process a document"""
     
@@ -194,24 +194,18 @@ async def upload_document(file: UploadFile = File(...)):
         # Generate document ID
         doc_id = f"doc_{int(datetime.now().timestamp())}"
         
-        # Generate insights
-        insights = await generate_insights(text)
-        
         # Store document
         documents[doc_id] = {
             "id": doc_id,
             "filename": file.filename,
             "text": text,
-            "insights": insights.dict(),
             "uploaded_at": datetime.now().isoformat()
         }
         
         return {
-            "success": True,
-            "document_id": doc_id,
+            "text": text,
             "filename": file.filename,
-            "insights": insights.dict(),
-            "preview": text[:500] + "..." if len(text) > 500 else text
+            "document_id": doc_id
         }
         
     except HTTPException:
@@ -219,15 +213,14 @@ async def upload_document(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to process document: {str(e)}")
 
-@app.post("/api/chat", response_model=ChatResponse)
+@app.post("/chat", response_model=ChatResponse)
 async def chat_with_document(request: ChatRequest):
     """Chat with the AI assistant about the document"""
     
-    # Get document context if available
+    # Use provided document context
     document_context = ""
-    if request.document_id and request.document_id in documents:
-        doc = documents[request.document_id]
-        document_context = f"\n\nDocument context from '{doc['filename']}':\n{doc['text'][:2000]}..."
+    if request.document_text:
+        document_context = f"\n\nDocument context:\n{request.document_text[:2000]}..."
     
     # Create chat prompt
     chat_prompt = f"""You are a helpful legal document assistant. Provide clear, concise answers about legal documents. Always recommend consulting with a qualified lawyer for important decisions.
@@ -250,13 +243,66 @@ Provide a helpful, well-formatted markdown response:"""
         timestamp=datetime.now().isoformat()
     )
 
-@app.get("/api/document/{doc_id}")
+@app.get("/document/{doc_id}")
 async def get_document(doc_id: str):
     """Get document details"""
     if doc_id not in documents:
         raise HTTPException(status_code=404, detail="Document not found")
     
     return documents[doc_id]
+
+@app.post("/insights")
+async def generate_insights(request: dict):
+    """Generate insights from document text"""
+    document_text = request.get("document_text", "")
+    
+    if not document_text:
+        raise HTTPException(status_code=400, detail="Document text is required")
+    
+    # Create insights prompt
+    insights_prompt = f"""Analyze the following legal document and provide insights in the requested categories. Format your response in markdown.
+
+Document text:
+{document_text[:3000]}...
+
+Please provide analysis in these categories:
+
+## Summary
+Provide a concise summary of the document's main purpose and key points.
+
+## Risks
+Identify potential risks, liabilities, and concerning clauses.
+
+## Obligations
+List the key obligations and responsibilities for each party.
+
+## Timelines
+Extract any important dates, deadlines, or time-sensitive requirements.
+
+Format each section with clear markdown headers and bullet points where appropriate."""
+
+    response_text = await call_ollama(insights_prompt, max_tokens=1000)
+    
+    # Parse the response into categories (simple approach)
+    sections = response_text.split("## ")
+    insights = {
+        "summary": "",
+        "risks": "",
+        "obligations": "",
+        "timelines": ""
+    }
+    
+    for section in sections[1:]:  # Skip first empty split
+        if section.lower().startswith("summary"):
+            insights["summary"] = "## " + section.strip()
+        elif section.lower().startswith("risks"):
+            insights["risks"] = "## " + section.strip()
+        elif section.lower().startswith("obligations"):
+            insights["obligations"] = "## " + section.strip()
+        elif section.lower().startswith("timelines"):
+            insights["timelines"] = "## " + section.strip()
+    
+    return {"insights": insights}
 
 @app.get("/health")
 async def health_check():

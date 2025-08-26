@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import Head from 'next/head'
 import Box from '@mui/material/Box'
 import { DocumentProvider } from '../src/context/DocumentContext'
-import { useTheme } from '../src/context/ThemeContext'
 import DocumentPreview from '../src/components/DocumentPreview'
 import ChatPanel from '../src/components/ChatPanel'
 import InsightsPanel from '../src/components/InsightsPanel'
@@ -86,21 +85,13 @@ function WorkspaceContent() {
 }
 
 export default function Workspace() {
-  const { theme } = useTheme()
-
   return (
     <DocumentProvider>
       <Head>
         <title>DocuMint - Legal Document Analysis</title>
         <meta name="description" content="AI-powered legal document analysis and insights" />
       </Head>
-      <Box sx={{ 
-        minHeight: '100vh',
-        bgcolor: theme.palette.background.default,
-        color: theme.palette.text.primary
-      }}>
-        <WorkspaceContent />
-      </Box>
+      <WorkspaceContent />
     </DocumentProvider>
   )
 }
