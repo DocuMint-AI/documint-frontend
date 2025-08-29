@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Layout from '../src/components/Layout'
 import Container from '@mui/material/Container'
 import Typography from '@mui/material/Typography'
@@ -16,17 +16,111 @@ import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
+import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import Alert from '@mui/material/Alert'
+import Snackbar from '@mui/material/Snackbar'
 import SettingsIcon from '@mui/icons-material/Settings'
 import PaletteIcon from '@mui/icons-material/Palette'
 import LanguageIcon from '@mui/icons-material/Language'
 import AccessibilityIcon from '@mui/icons-material/Accessibility'
 import SecurityIcon from '@mui/icons-material/Security'
+import SmartToyIcon from '@mui/icons-material/SmartToy'
+import RefreshIcon from '@mui/icons-material/Refresh'
 import { useThemeContext } from '../src/context/ThemeContext'
+import { useDocument } from '../src/context/DocumentContext'
 
 export default function Settings() {
   const { mode, toggleMode } = useThemeContext()
+  const { availableModels, currentModel, loading, fetchAvailableModels, selectModel } = useDocument()
+  const [selectedModel, setSelectedModel] = useState('')
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' })
+
+  useEffect(() => {
+    setSelectedModel(currentModel)
+  }, [currentModel])
+
+  const handleModelChange = async (event) => {
+    const newModel = event.target.value
+    setSelectedModel(newModel)
+    
+    const result = await selectModel(newModel)
+    if (result.success) {
+      setSnackbar({
+        open: true,
+        message: `Successfully switched to ${newModel}`,
+        severity: 'success'
+      })
+    } else {
+      setSnackbar({
+        open: true,
+        message: `Failed to switch model: ${result.error}`,
+        severity: 'error'
+      })
+      // Revert selection on failure
+      setSelectedModel(currentModel)
+    }
+  }
+
+  const handleRefreshModels = async () => {
+    await fetchAvailableModels()
+    setSnackbar({
+      open: true,
+      message: 'Models list refreshed',
+      severity: 'info'
+    })
+  }
 
   const settingsSections = [
+    {
+      title: 'AI Model',
+      icon: SmartToyIcon,
+      items: [
+        {
+          label: 'Current Model',
+          description: 'Select the Ollama model to use for document analysis and chat',
+          control: (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FormControl size="small" sx={{ minWidth: 200 }}>
+                <Select 
+                  value={selectedModel} 
+                  onChange={handleModelChange}
+                  disabled={loading}
+                  displayEmpty
+                >
+                  {availableModels.length === 0 ? (
+                    <MenuItem value="" disabled>
+                      No models available
+                    </MenuItem>
+                  ) : (
+                    availableModels.map((model) => (
+                      <MenuItem key={model.name} value={model.name}>
+                        <Box>
+                          <Typography variant="body2" fontWeight={500}>
+                            {model.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {model.size ? `${(model.size / 1024 / 1024 / 1024).toFixed(1)} GB` : 'Size unknown'}
+                          </Typography>
+                        </Box>
+                      </MenuItem>
+                    ))
+                  )}
+                </Select>
+              </FormControl>
+              <Button
+                size="small"
+                onClick={handleRefreshModels}
+                disabled={loading}
+                sx={{ minWidth: 'auto', p: 1 }}
+              >
+                {loading ? <CircularProgress size={16} /> : <RefreshIcon />}
+              </Button>
+            </Box>
+          )
+        }
+      ]
+    },
     {
       title: 'Appearance',
       icon: PaletteIcon,
@@ -180,6 +274,22 @@ export default function Settings() {
             🚧 Some settings are currently in development and will be available in future updates.
           </Typography>
         </Box>
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={4000}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert 
+            onClose={() => setSnackbar({ ...snackbar, open: false })} 
+            severity={snackbar.severity}
+            variant="filled"
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </Layout>
   )

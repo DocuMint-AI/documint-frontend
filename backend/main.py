@@ -43,7 +43,10 @@ class DocumentInsights(BaseModel):
 
 # Ollama configuration
 OLLAMA_BASE_URL = "http://localhost:11434"
-MODEL_NAME = "doomgrave/gemma3-tools:12b-it-q2_K"
+MODEL_NAME = "doomgrave/gemma3-tools:12b-it-q2_K"  # Default model
+
+# Global variable to store current model (in production, use database)
+current_model = MODEL_NAME
 
 async def call_ollama(prompt: str, max_tokens: int = 1000) -> str:
     """Call Ollama API with the given prompt"""
@@ -52,7 +55,7 @@ async def call_ollama(prompt: str, max_tokens: int = 1000) -> str:
             response = await client.post(
                 f"{OLLAMA_BASE_URL}/api/generate",
                 json={
-                    "model": MODEL_NAME,
+                    "model": current_model,  # Use current selected model
                     "prompt": prompt,
                     "stream": False,
                     "options": {
@@ -169,6 +172,62 @@ Format your response clearly with each section. Be concise and specific.
         obligations=obligations[:5],
         summary=summary.strip() or "Document uploaded and analyzed successfully."
     )
+
+@app.get("/models")
+async def get_available_models():
+    """Get list of available Ollama models"""
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"{OLLAMA_BASE_URL}/api/tags")
+            
+            if response.status_code == 200:
+                data = response.json()
+                models = []
+                for model in data.get("models", []):
+                    models.append({
+                        "name": model.get("name", ""),
+                        "size": model.get("size", 0),
+                        "modified_at": model.get("modified_at", "")
+                    })
+                return {"models": models, "current_model": current_model}
+            else:
+                raise HTTPException(status_code=500, detail="Failed to fetch models from Ollama")
+                
+    except Exception as e:
+        print(f"Error fetching models: {e}")
+        raise HTTPException(status_code=500, detail="Unable to connect to Ollama service")
+
+@app.post("/models/select")
+async def select_model(request: dict):
+    """Select a different Ollama model"""
+    global current_model
+    
+    model_name = request.get("model_name")
+    if not model_name:
+        raise HTTPException(status_code=400, detail="Model name is required")
+    
+    try:
+        # Verify the model exists by trying to list models
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(f"{OLLAMA_BASE_URL}/api/tags")
+            
+            if response.status_code == 200:
+                data = response.json()
+                available_models = [model.get("name") for model in data.get("models", [])]
+                
+                if model_name in available_models:
+                    current_model = model_name
+                    return {"success": True, "current_model": current_model}
+                else:
+                    raise HTTPException(status_code=400, detail=f"Model '{model_name}' not found")
+            else:
+                raise HTTPException(status_code=500, detail="Failed to verify model availability")
+                
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error selecting model: {e}")
+        raise HTTPException(status_code=500, detail="Unable to connect to Ollama service")
 
 @app.post("/upload")
 async def upload_document(file: UploadFile = File(...)):
