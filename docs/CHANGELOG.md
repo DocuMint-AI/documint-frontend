@@ -6,7 +6,63 @@ The format is based on "Keep a Changelog" and adheres to semantic versioning whe
 
 ## [Unreleased]
 
-- Pending features: animations, comprehensive tests, advanced accessibility features.
+- Pending features: advanced AI model integration, document parsing improvements, comprehensive tests.
+
+## [v0.2.0] - 2025-09-08
+### Added
+- **Material 3 (Material You) Design System Integration**
+  - Dynamic color generation with Material Color Utilities
+  - 6 customizable accent colors (Blue, Green, Purple, Orange, Red, Teal)
+  - OS theme sync with automatic light/dark mode detection
+  - Complete Material 3 typography scale and color tokens
+  - Enhanced Material 3 component styling and animations
+
+- **Interactive Resizable Panel System**
+  - Three-panel workspace layout (Document, AI Insights, Q&A)
+  - Smooth drag-to-resize functionality with visual feedback
+  - Touch and keyboard accessibility support
+  - Panel state persistence with localStorage
+  - Responsive breakpoints for mobile, tablet, and desktop
+  - Panel expand/collapse and minimize functionality
+
+- **Enhanced User Experience Features**
+  - Framer Motion animations throughout the interface
+  - Micro-interactions and hover effects
+  - Advanced theme customization in settings page
+  - Improved upload area with gradient animations
+  - Professional Material 3 styled components
+
+- **Accessibility Improvements**
+  - ARIA roles and labels for screen readers
+  - Keyboard navigation support for panels
+  - High contrast support preparation
+  - Focus management and visual indicators
+
+### Changed
+- **Complete UI Redesign**: Transformed from Material Design to Material 3 (Material You)
+- **Workspace Page**: Replaced static layout with interactive resizable panels
+- **Settings Page**: Added theme customization with accent color picker
+- **Upload Page**: Enhanced with Material 3 styling and animations
+- **Component Architecture**: Modular panel system with context-based state management
+
+### Fixed
+- **Server-Side Rendering (SSR) Compatibility**
+  - Fixed `window` usage errors during build
+  - Resolved custom palette property references
+  - Ensured proper theme hydration on server and client
+  - Import/export statement corrections for Next.js compatibility
+
+### Technical
+- Added Material Color Utilities dependency for dynamic theming
+- Implemented PanelContext for state management
+- Created ResponsiveLayout component for adaptive layouts
+- Enhanced TypeScript support with proper interfaces
+- Optimized build output with static generation support
+
+### Notes
+- This release focuses on the user interface and interaction design
+- Backend API integration remains planned for future releases
+- All core UI components now follow Material 3 design principles
 
 ## [v0.1.0] - 2025-08-27
 ### Added

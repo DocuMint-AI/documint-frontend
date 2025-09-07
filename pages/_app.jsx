@@ -2,6 +2,7 @@ import * as React from 'react'
 import Head from 'next/head'
 import { ThemeProvider } from '../src/context/ThemeContext'
 import { DocumentProvider } from '../src/context/DocumentContext'
+import { Material3ThemeProvider } from '../src/theme/Material3ThemeProvider'
 import CssBaseline from '@mui/material/CssBaseline'
 
 export default function App({ Component, pageProps }) {
@@ -9,14 +10,16 @@ export default function App({ Component, pageProps }) {
     <>
       <Head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
-        <title>DocuMint</title>
+        <title>DocuMint AI - Legal Document Analysis</title>
       </Head>
-      <ThemeProvider>
-        <DocumentProvider>
-          <CssBaseline />
-          <Component {...pageProps} />
-        </DocumentProvider>
-      </ThemeProvider>
+      <Material3ThemeProvider>
+        <ThemeProvider>
+          <DocumentProvider>
+            <CssBaseline />
+            <Component {...pageProps} />
+          </DocumentProvider>
+        </ThemeProvider>
+      </Material3ThemeProvider>
     </>
   )
 }

@@ -7,10 +7,11 @@ import LinearProgress from '@mui/material/LinearProgress'
 import Alert from '@mui/material/Alert'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile'
-import { alpha } from '@mui/material/styles'
+import { alpha, useTheme } from '@mui/material/styles'
 import { useDocument } from '../context/DocumentContext'
 
 export default function UploadArea() {
+  const theme = useTheme()
   const fileRef = useRef()
   const [error, setError] = useState(null)
   const [dragActive, setDragActive] = useState(false)
@@ -117,20 +118,45 @@ export default function UploadArea() {
       sx={{
         p: 6,
         textAlign: 'center',
-        borderRadius: 3,
-        border: dragActive ? 2 : 1,
+        borderRadius: 4,
+        border: dragActive ? 3 : 2,
         borderStyle: 'dashed',
-        borderColor: dragActive ? 'primary.main' : 'divider',
-        bgcolor: dragActive ? alpha('#1976d2', 0.04) : 'background.paper',
-        transition: 'all 0.2s ease-in-out',
+  borderColor: dragActive ? 'primary.main' : (theme.palette.outline || theme.palette.divider),
+        bgcolor: dragActive 
+          ? alpha(theme.palette.primary.main, 0.08) 
+          : 'background.paper',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: uploading ? 'default' : 'pointer',
+        position: 'relative',
+        overflow: 'hidden',
         '&:hover': {
-          borderColor: uploading ? 'divider' : 'primary.main',
-          bgcolor: uploading ? 'background.paper' : alpha('#1976d2', 0.02),
+          borderColor: uploading ? (theme.palette.outline || theme.palette.divider) : 'primary.main',
+          bgcolor: uploading 
+            ? 'background.paper' 
+            : alpha(theme.palette.primary.main, 0.04),
+          transform: uploading ? 'none' : 'translateY(-2px)',
+          boxShadow: uploading ? 'none' : 3,
+        },
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: `linear-gradient(45deg, 
+            ${alpha(theme.palette.primary.main, 0.02)} 25%, 
+            transparent 25%, 
+            transparent 75%, 
+            ${alpha(theme.palette.primary.main, 0.02)} 75%
+          )`,
+          backgroundSize: '20px 20px',
+          opacity: dragActive ? 1 : 0,
+          transition: 'opacity 0.3s ease',
         },
       }}
       onClick={!uploading ? openFilePicker : undefined}
-      elevation={dragActive ? 3 : 1}
+      elevation={dragActive ? 8 : 1}
     >
       <input 
         ref={fileRef} 
@@ -141,51 +167,91 @@ export default function UploadArea() {
         disabled={uploading}
       />
 
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        gap: 4,
+        position: 'relative',
+        zIndex: 1
+      }}>
         <Box
           sx={{
-            width: 80,
-            height: 80,
+            width: 96,
+            height: 96,
             borderRadius: '50%',
-            bgcolor: alpha('#1976d2', 0.1),
+            bgcolor: alpha(theme.palette.primary.main, 0.12),
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'all 0.2s ease-in-out',
-            transform: dragActive ? 'scale(1.1)' : 'scale(1)',
+            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: dragActive ? 'scale(1.15) rotate(5deg)' : 'scale(1)',
+            border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+            boxShadow: dragActive ? 
+              `0 8px 32px ${alpha(theme.palette.primary.main, 0.3)}` : 
+              `0 4px 16px ${alpha(theme.palette.primary.main, 0.1)}`,
           }}
         >
           <CloudUploadIcon 
             sx={{ 
-              fontSize: 40, 
+              fontSize: 48, 
               color: 'primary.main',
-              transition: 'all 0.2s ease-in-out',
+              transition: 'all 0.3s ease',
+              filter: dragActive ? 'brightness(1.2)' : 'none',
             }} 
           />
         </Box>
 
         <Box>
-          <Typography variant="h6" gutterBottom color="text.primary">
+          <Typography 
+            variant="headlineSmall" 
+            gutterBottom 
+            color="onSurface.default"
+            sx={{ fontWeight: 500 }}
+          >
             {dragActive ? 'Drop your file here' : 'Upload your legal document'}
           </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Drag and drop a file here, or click to browse
+          <Typography 
+            variant="bodyLarge" 
+            color="text.secondary" 
+            sx={{ mb: 2, maxWidth: 360, mx: 'auto' }}
+          >
+            Drag and drop a file here, or click to browse your files
           </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Supported formats: PDF, DOCX • Max size: 50MB
+          <Typography 
+            variant="labelMedium" 
+            color="text.secondary"
+            sx={{
+              bgcolor: alpha(theme.palette.background.default, 0.8),
+              px: 2,
+              py: 0.5,
+              borderRadius: 2,
+              display: 'inline-block'
+            }}
+          >
+            Supported: PDF, DOCX • Max: 50MB
           </Typography>
         </Box>
 
         {error && (
-          <Alert severity="error" sx={{ width: '100%', textAlign: 'left' }}>
+          <Alert 
+            severity="error" 
+            sx={{ 
+              width: '100%', 
+              textAlign: 'left',
+              borderRadius: 3,
+              bgcolor: alpha(theme.palette.error.main, 0.08),
+              border: `1px solid ${alpha(theme.palette.error.main, 0.2)}`,
+            }}
+          >
             {error}
           </Alert>
         )}
 
         {!dragActive && (
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
             <Button 
-              variant="contained" 
+              variant="filled"
               startIcon={<InsertDriveFileIcon />}
               onClick={(e) => {
                 e.stopPropagation()
@@ -193,28 +259,46 @@ export default function UploadArea() {
               }}
               disabled={uploading}
               size="large"
+              sx={{
+                borderRadius: 3,
+                px: 3,
+                py: 1.5,
+                fontSize: '1rem',
+                fontWeight: 500,
+                textTransform: 'none',
+                background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.3)}`,
+                '&:hover': {
+                  boxShadow: `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+                  transform: 'translateY(-1px)',
+                },
+              }}
             >
-              {uploading ? 'Uploading...' : 'Choose File'}
+              {uploading ? 'Processing...' : 'Choose File'}
             </Button>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="bodyMedium" color="text.secondary">
               or drag and drop
             </Typography>
           </Box>
         )}
 
         {uploading && (
-          <Box sx={{ width: '100%', maxWidth: 400 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <InsertDriveFileIcon color="primary" fontSize="small" />
-              <Typography variant="body2" color="text.secondary">
+          <Box sx={{ width: '100%', maxWidth: 480 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <InsertDriveFileIcon color="primary" />
+              <Typography variant="bodyLarge" color="text.primary" sx={{ fontWeight: 500 }}>
                 Processing document...
               </Typography>
             </Box>
             <LinearProgress 
               sx={{ 
-                height: 6, 
-                borderRadius: 3,
-                bgcolor: alpha('#1976d2', 0.1),
+                height: 8, 
+                borderRadius: 4,
+                bgcolor: alpha(theme.palette.primary.main, 0.12),
+                '& .MuiLinearProgress-bar': {
+                  borderRadius: 4,
+                  background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+                },
               }} 
             />
           </Box>
