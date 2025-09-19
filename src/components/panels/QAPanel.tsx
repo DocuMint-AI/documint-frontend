@@ -1,163 +1,82 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Box, 
-  Card, 
-  CardHeader, 
-  CardContent, 
-  IconButton, 
-  Typography, 
-  TextField,
-  useTheme,
-  alpha,
-  Stack,
-  Divider,
-  Avatar
-} from '@mui/material';
-import { 
-  MessageCircle, 
-  Maximize2, 
-  Minimize2, 
-  Minus,
-  Send,
-  Mic,
-  User,
-  Bot
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { usePanelContext, type PanelId } from '../../context/PanelContext';
+'use client';
 
-interface BasePanelProps {
-  panelId: PanelId;
+import React, { useState } from 'react';
+import { Maximize2, Minimize2, MessageCircle, Send, Mic, Minus } from 'lucide-react';
+
+interface QAPanelProps {
   expanded: boolean;
-  minimized: boolean;
   onExpand: () => void;
   onMinimize: () => void;
-  onRestore: () => void;
 }
-
-interface QAPanelProps extends BasePanelProps {}
 
 interface Message {
-  id: string;
   type: 'question' | 'answer';
-  content: string;
-  timestamp: Date;
-  isLoading?: boolean;
+  text: string;
+  timestamp: string;
 }
 
-const INITIAL_MESSAGES: Message[] = [
-  {
-    id: '1',
-    type: 'question',
-    content: 'What is the duration of the confidentiality obligation?',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30) // 30 minutes ago
-  },
-  {
-    id: '2',
-    type: 'answer',
-    content: 'According to Section 2 of the agreement, the confidentiality obligation lasts for five (5) years from the date of disclosure. This means that the recipient must maintain confidentiality for a full five years after receiving any confidential information.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 29)
-  },
-  {
-    id: '3',
-    type: 'question',
-    content: 'What happens if there is a breach of confidentiality?',
-    timestamp: new Date(Date.now() - 1000 * 60 * 25)
-  },
-  {
-    id: '4',
-    type: 'answer',
-    content: 'Section 4 states that any breach would cause "irreparable harm" to the Company, and monetary damages would be inadequate compensation. Therefore, the Company can seek injunctive relief and other equitable remedies beyond just monetary damages. This gives the Company strong legal recourse in case of a breach.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 24)
-  }
-];
-
-const EXPANDED_MESSAGES: Message[] = [
-  ...INITIAL_MESSAGES,
-  {
-    id: '5',
-    type: 'question',
-    content: 'Is there a termination clause in this agreement?',
-    timestamp: new Date(Date.now() - 1000 * 60 * 20)
-  },
-  {
-    id: '6',
-    type: 'answer',
-    content: 'Yes, Section 3 includes a termination clause. Either party can terminate this agreement with thirty (30) days written notice. However, upon termination, all confidential information must be returned or destroyed at the Company\'s discretion. The confidentiality obligations continue even after termination.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 19)
-  },
-  {
-    id: '7',
-    type: 'question',
-    content: 'Are there any exceptions to what is considered confidential information?',
-    timestamp: new Date(Date.now() - 1000 * 60 * 15)
-  },
-  {
-    id: '8',
-    type: 'answer',
-    content: 'The current agreement does not explicitly list exceptions to confidential information. Typically, NDAs include exceptions for information that is publicly available, independently developed, or already known to the recipient. This might be something to clarify with the other party.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 14)
-  }
-];
-
-export function QAPanel({ 
-  panelId, 
-  expanded, 
-  minimized, 
-  onExpand, 
-  onMinimize, 
-  onRestore 
-}: QAPanelProps) {
-  const theme = useTheme();
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => {
   const [question, setQuestion] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Use different message sets based on expanded state
-  const displayMessages = expanded ? EXPANDED_MESSAGES : messages;
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [displayMessages]);
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const handleSendQuestion = async () => {
-    if (!question.trim() || isLoading) return;
-
-    const newQuestion: Message = {
-      id: Date.now().toString(),
+  const [messages, setMessages] = useState<Message[]>([
+    {
       type: 'question',
-      content: question.trim(),
-      timestamp: new Date(),
-    };
+      text: 'What is the duration of the confidentiality obligation?',
+      timestamp: '10:30 AM'
+    },
+    {
+      type: 'answer',
+      text: 'According to Section 2 of the agreement, the confidentiality obligation lasts for five (5) years from the date of disclosure.',
+      timestamp: '10:30 AM'
+    }
+  ]);
 
-    setMessages(prev => [...prev, newQuestion]);
-    setQuestion('');
-    setIsLoading(true);
+  // Additional messages for expanded view
+  const expandedMessages: Message[] = [
+    ...messages,
+    {
+      type: 'question',
+      text: 'What happens if there is a breach of confidentiality?',
+      timestamp: '10:32 AM'
+    },
+    {
+      type: 'answer',
+      text: 'Section 4 states that any breach would cause irreparable harm, and the Company can seek injunctive relief and other equitable remedies beyond monetary damages.',
+      timestamp: '10:32 AM'
+    },
+    {
+      type: 'question',
+      text: 'Is there a termination clause?',
+      timestamp: '10:35 AM'
+    },
+    {
+      type: 'answer',
+      text: 'Yes, Section 3 allows either party to terminate with 30 days written notice. Upon termination, all confidential information must be returned or destroyed.',
+      timestamp: '10:35 AM'
+    }
+  ];
 
-    // Simulate AI response delay
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        type: 'answer',
-        content: 'I\'ll analyze the document to provide you with a comprehensive answer to your question. Based on the content I can see, let me review the relevant sections and provide you with accurate information.',
-        timestamp: new Date(),
+  const displayMessages = expanded ? expandedMessages : messages;
+
+  const handleSendQuestion = () => {
+    if (question.trim()) {
+      const newQuestion: Message = {
+        type: 'question',
+        text: question,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       
-      setMessages(prev => [...prev, aiResponse]);
-      setIsLoading(false);
-    }, 1500);
-  };
-
-  const handleKeyPress = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      handleSendQuestion();
+      setMessages(prev => [...prev, newQuestion]);
+      setQuestion('');
+      
+      // Simulate AI response
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          type: 'answer',
+          text: 'I\'ll analyze the document to provide you with a comprehensive answer to your question.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        }]);
+      }, 1000);
     }
   };
 
@@ -165,268 +84,92 @@ export function QAPanel({
     setIsRecording(!isRecording);
     // Voice recording logic would go here
   };
-
-  const headerActions = (
-    <Box display="flex" gap={1}>
-      <IconButton
-        size="small"
-        onClick={onMinimize}
-        aria-label="Minimize panel"
-        sx={{
-          color: theme.palette.text.secondary,
-          '&:hover': {
-            backgroundColor: alpha((theme.palette as any).tertiary?.main || theme.palette.info.main, 0.1),
-          },
-        }}
-      >
-        <Minus size={16} />
-      </IconButton>
-      <IconButton
-        size="small"
-        onClick={onExpand}
-        aria-label={expanded ? "Exit fullscreen" : "Enter fullscreen"}
-        sx={{
-          color: (theme.palette as any).tertiary?.main || theme.palette.info.main,
-          '&:hover': {
-            backgroundColor: alpha((theme.palette as any).tertiary?.main || theme.palette.info.main, 0.1),
-          },
-        }}
-      >
-        {expanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-      </IconButton>
-    </Box>
-  );
-
+  
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      style={{ height: '100%' }}
-    >
-      <Card 
-        sx={{ 
-          height: '100%', 
-          display: 'flex', 
-          flexDirection: 'column',
-          borderRadius: 3,
-          boxShadow: theme.shadows[1],
-          '&:hover': {
-            boxShadow: theme.shadows[2],
-          },
-          transition: 'box-shadow 0.3s ease',
-        }}
-      >
-        <CardHeader
-          avatar={
-            <Box
-              sx={{
-                p: 1,
-                borderRadius: 2,
-                backgroundColor: alpha((theme.palette as any).tertiary?.main || theme.palette.info.main, 0.1),
-                color: (theme.palette as any).tertiary?.main || theme.palette.info.main,
-              }}
+    <div className="h-full flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-600 bg-green-50/30 dark:bg-green-900/30">
+        <div className="flex items-center gap-3">
+          <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Q&A Assistant</h2>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onMinimize}
+            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
+            aria-label="Minimize panel"
+          >
+            <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+          </button>
+          <button
+            onClick={onExpand}
+            className="p-2 rounded-lg bg-green-100 hover:bg-green-200 dark:bg-green-800 dark:hover:bg-green-700 transition-colors duration-200"
+            aria-label={expanded ? "Exit fullscreen" : "Enter fullscreen"}
+          >
+            {expanded ? <Minimize2 className="w-4 h-4 text-green-700 dark:text-green-300" /> : <Maximize2 className="w-4 h-4 text-green-700 dark:text-green-300" />}
+          </button>
+        </div>
+      </div>
+      
+      {/* Messages */}
+      <div className="flex-1 p-4 overflow-auto">
+        <div className="space-y-3">
+          {displayMessages.map((message, index) => (
+            <div
+              key={index}
+              className={`p-3 rounded-lg border transition-all duration-200 ${
+                message.type === 'question'
+                  ? 'bg-blue-50/50 border-blue-100 ml-8 dark:bg-blue-900/20 dark:border-blue-800'
+                  : 'bg-green-50/50 border-green-100 mr-8 dark:bg-green-900/20 dark:border-green-800'
+              }`}
             >
-              <MessageCircle size={20} />
-            </Box>
-          }
-          title={
-            <Typography variant="h6" component="h2" fontWeight={600}>
-              Q&A Assistant
-            </Typography>
-          }
-          subheader={
-            <Typography variant="body2" color="text.secondary">
-              Ask questions about the document
-            </Typography>
-          }
-          action={headerActions}
-          sx={{ 
-            pb: 1,
-            '& .MuiCardHeader-content': {
-              overflow: 'hidden',
-            },
-          }}
-        />
-        
-        {/* Messages Area */}
-        <CardContent sx={{ flexGrow: 1, overflow: 'auto', pt: 0, pb: 1 }}>
-          <Stack spacing={2}>
-            <AnimatePresence>
-              {displayMessages.map((message, index) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ 
-                    duration: 0.3, 
-                    delay: index * 0.05,
-                    ease: "easeOut"
-                  }}
-                >
-                  <Box
-                    display="flex"
-                    justifyContent={message.type === 'question' ? 'flex-end' : 'flex-start'}
-                    mb={1}
-                  >
-                    <Box
-                      sx={{
-                        maxWidth: '85%',
-                        display: 'flex',
-                        flexDirection: message.type === 'question' ? 'row-reverse' : 'row',
-                        alignItems: 'flex-start',
-                        gap: 1,
-                      }}
-                    >
-                      <Avatar
-                        sx={{
-                          width: 24,
-                          height: 24,
-                          fontSize: '0.75rem',
-                          bgcolor: message.type === 'question' 
-                            ? theme.palette.primary.main 
-                            : (theme.palette as any).tertiary?.main || theme.palette.info.main,
-                        }}
-                      >
-                        {message.type === 'question' ? <User size={12} /> : <Bot size={12} />}
-                      </Avatar>
-                      
-                      <Card
-                        variant="outlined"
-                        sx={{
-                          p: 1.5,
-                          backgroundColor: message.type === 'question'
-                            ? alpha(theme.palette.primary.main, 0.1)
-                            : alpha((theme.palette as any).tertiary?.main || theme.palette.info.main, 0.05),
-                          borderColor: message.type === 'question'
-                            ? alpha(theme.palette.primary.main, 0.2)
-                            : alpha((theme.palette as any).tertiary?.main || theme.palette.info.main, 0.2),
-                          borderRadius: 2,
-                        }}
-                      >
-                        <Typography 
-                          variant="body2" 
-                          sx={{ 
-                            fontSize: '0.875rem',
-                            lineHeight: 1.4,
-                            color: theme.palette.text.primary,
-                          }}
-                        >
-                          {message.content}
-                        </Typography>
-                        <Typography 
-                          variant="caption" 
-                          sx={{ 
-                            display: 'block',
-                            mt: 0.5,
-                            color: theme.palette.text.secondary,
-                            fontSize: '0.7rem',
-                          }}
-                        >
-                          {formatTime(message.timestamp)}
-                        </Typography>
-                      </Card>
-                    </Box>
-                  </Box>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            
-            {isLoading && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Box display="flex" justifyContent="flex-start" mb={1}>
-                  <Box display="flex" alignItems="flex-start" gap={1}>
-                    <Avatar
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        fontSize: '0.75rem',
-                        bgcolor: (theme.palette as any).tertiary?.main || theme.palette.info.main,
-                      }}
-                    >
-                      <Bot size={12} />
-                    </Avatar>
-                    <Card
-                      variant="outlined"
-                      sx={{
-                        p: 1.5,
-                        backgroundColor: alpha((theme.palette as any).tertiary?.main || theme.palette.info.main, 0.05),
-                        borderColor: alpha((theme.palette as any).tertiary?.main || theme.palette.info.main, 0.2),
-                        borderRadius: 2,
-                      }}
-                    >
-                      <Typography variant="body2" color="text.secondary">
-                        AI is thinking...
-                      </Typography>
-                    </Card>
-                  </Box>
-                </Box>
-              </motion.div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </Stack>
-        </CardContent>
-        
-        <Divider />
-        
-        {/* Input Area */}
-        <Box sx={{ p: 2 }}>
-          <Box display="flex" gap={1} alignItems="flex-end">
-            <TextField
-              fullWidth
-              multiline
-              maxRows={3}
-              placeholder="Ask a question about the document..."
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              onKeyPress={handleKeyPress}
-              disabled={isLoading}
-              size="small"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2,
-                },
-              }}
-            />
-            <IconButton
-              onClick={handleVoiceInput}
-              color={isRecording ? 'error' : 'default'}
-              disabled={isLoading}
-              sx={{
-                borderRadius: 2,
-                '&:hover': {
-                  backgroundColor: alpha(
-                    isRecording ? theme.palette.error.main : theme.palette.action.hover,
-                    0.1
-                  ),
-                },
-              }}
-            >
-              <Mic size={20} />
-            </IconButton>
-            <IconButton
-              onClick={handleSendQuestion}
-              disabled={!question.trim() || isLoading}
-              color="primary"
-              sx={{
-                borderRadius: 2,
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                },
-              }}
-            >
-              <Send size={20} />
-            </IconButton>
-          </Box>
-        </Box>
-      </Card>
-    </motion.div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                  {message.type === 'question' ? 'You' : 'AI Assistant'}
+                </span>
+                <span className="text-xs text-gray-400">{message.timestamp}</span>
+              </div>
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                {message.text}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+      
+      {/* Input */}
+      <div className="p-4 border-t border-gray-100 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-700/50">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Ask a question about the document..."
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSendQuestion()}
+            className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          />
+          <button
+            onClick={handleVoiceInput}
+            className={`px-3 py-2 rounded-lg transition-colors duration-200 flex items-center justify-center ${
+              isRecording 
+                ? 'bg-red-500 text-white hover:bg-red-600' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500'
+            }`}
+            aria-label={isRecording ? "Stop recording" : "Start voice input"}
+          >
+            <Mic className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleSendQuestion}
+            disabled={!question.trim()}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center dark:disabled:bg-gray-600"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
-}
+};
+
+export default QAPanel;
