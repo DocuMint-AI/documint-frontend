@@ -76,10 +76,10 @@ src/
    ```
    Edit `.env.local` to customize API endpoints and configuration:
    ```env
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-   NEXT_PUBLIC_UPLOAD_ENDPOINT=/api/upload
-   NEXT_PUBLIC_PROCESS_ENDPOINT=/api/v1/process-document
-   NEXT_PUBLIC_QA_ENDPOINT=/api/v1/qa
+   NEXT_PUBLIC_BACKEND_BASE_URL=http://localhost:8000
+   NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT=/upload
+   NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT=/api/v1/process-document
+   NEXT_PUBLIC_BACKEND_QA_ENDPOINT=/api/v1/qa
    NEXT_PUBLIC_MAX_FILE_SIZE=10485760
    NEXT_PUBLIC_SUPPORTED_FORMATS=.pdf,.doc,.docx
    ```
@@ -120,11 +120,14 @@ src/
 The application uses environment variables for configuration. Copy `.env.example` to `.env.local` and customize:
 
 ```env
-# API Configuration
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000           # Backend server URL
-NEXT_PUBLIC_UPLOAD_ENDPOINT=/api/upload                  # File upload endpoint
-NEXT_PUBLIC_PROCESS_ENDPOINT=/api/v1/process-document    # Document processing endpoint
-NEXT_PUBLIC_QA_ENDPOINT=/api/v1/qa                       # Q&A endpoint
+# Backend API Configuration
+NEXT_PUBLIC_BACKEND_BASE_URL=http://localhost:8000       # Backend server URL
+NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT=/upload              # File upload endpoint
+NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT=/api/v1/process-document  # Document processing endpoint
+NEXT_PUBLIC_BACKEND_QA_ENDPOINT=/api/v1/qa               # Q&A endpoint
+
+# Frontend Configuration
+NEXT_PUBLIC_FRONTEND_PORT=3000                           # Frontend development port
 
 # App Configuration  
 NEXT_PUBLIC_MAX_FILE_SIZE=10485760                       # Max file size in bytes (10MB)
@@ -142,9 +145,9 @@ To connect to a real backend, enable "Real FastAPI Backend" in settings:
 - Requires a running FastAPI server
 - Uses environment variables for endpoint configuration
 - Expected endpoints (configurable via .env):
-  - `POST ${NEXT_PUBLIC_API_BASE_URL}${NEXT_PUBLIC_UPLOAD_ENDPOINT}` - File upload
-  - `POST ${NEXT_PUBLIC_API_BASE_URL}${NEXT_PUBLIC_PROCESS_ENDPOINT}` - Document analysis
-  - `POST ${NEXT_PUBLIC_API_BASE_URL}${NEXT_PUBLIC_QA_ENDPOINT}` - Question answering
+  - `POST ${NEXT_PUBLIC_BACKEND_BASE_URL}${NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT}` - File upload
+  - `POST ${NEXT_PUBLIC_BACKEND_BASE_URL}${NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT}` - Document analysis
+  - `POST ${NEXT_PUBLIC_BACKEND_BASE_URL}${NEXT_PUBLIC_BACKEND_QA_ENDPOINT}` - Question answering
 
 ## 🎨 Theming
 

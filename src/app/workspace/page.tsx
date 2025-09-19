@@ -130,25 +130,25 @@ export default function WorkspacePage() {
 
   return (
     <Layout>
-      <div className="h-screen bg-gray-50 dark:bg-gray-900 font-sans flex flex-col">
+      <div className="h-screen bg-gray-50 dark:bg-gray-900 font-sans flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="p-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+        <div className="flex-shrink-0 p-4 md:p-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white mb-1 truncate">
                 Document Analysis Workspace
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-gray-400 text-sm md:text-base truncate">
                 {currentDocument.filename}
               </p>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm">
+              <div className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
                 Risk Score: <span className="font-semibold text-orange-600">
                   {currentDocument.analysis?.riskScore?.toFixed(1) || 'N/A'}
                 </span>
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
                 Compliance Score: <span className="font-semibold text-green-600">
                   {currentDocument.analysis?.complianceScore?.toFixed(1) || 'N/A'}
                 </span>
@@ -158,11 +158,11 @@ export default function WorkspacePage() {
         </div>
         
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {/* Top panels area */}
           <div
             ref={containerRef}
-            className="flex-1 flex bg-gray-100/50 dark:bg-gray-800/50 p-4 gap-1"
+            className="flex-1 flex bg-gray-100/50 dark:bg-gray-800/50 p-2 md:p-4 gap-1 md:gap-2 min-h-0 overflow-hidden"
           >
             {visiblePanels.map((panel, index) => {
               const Component = panel.component;
@@ -183,10 +183,10 @@ export default function WorkspacePage() {
                 <React.Fragment key={panel.id}>
                   {/* Panel */}
                   <div
-                    className="panel-transition"
+                    className="panel-transition min-h-0 overflow-hidden"
                     style={{
                       width,
-                      minWidth: isExpanded ? '100%' : '200px',
+                      minWidth: isExpanded ? '100%' : '250px',
                       maxWidth: isExpanded ? '100%' : '70%'
                     }}
                   >
@@ -210,33 +210,33 @@ export default function WorkspacePage() {
 
           {/* Minimized panel at bottom */}
           {minimizedPanelData && (
-            <div className="h-16 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-sm">
-              <div className="h-full flex items-center justify-between px-6 py-2">
-                <div className="flex items-center gap-3">
-                  {minimizedPanelData.id === 'document' && <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
-                  {minimizedPanelData.id === 'insights' && <Brain className="w-5 h-5 text-purple-600 dark:text-purple-400" />}
-                  {minimizedPanelData.id === 'qa' && <MessageCircle className="w-5 h-5 text-green-600 dark:text-green-400" />}
-                  <span className="font-medium text-gray-700 dark:text-gray-300">
+            <div className="flex-shrink-0 h-12 md:h-16 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-sm">
+              <div className="h-full flex items-center justify-between px-4 md:px-6 py-2">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  {minimizedPanelData.id === 'document' && <FileText className="w-4 md:w-5 h-4 md:h-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />}
+                  {minimizedPanelData.id === 'insights' && <Brain className="w-4 md:w-5 h-4 md:h-5 text-purple-600 dark:text-purple-400 flex-shrink-0" />}
+                  {minimizedPanelData.id === 'qa' && <MessageCircle className="w-4 md:w-5 h-4 md:h-5 text-green-600 dark:text-green-400 flex-shrink-0" />}
+                  <span className="font-medium text-gray-700 dark:text-gray-300 text-sm md:text-base truncate">
                     {minimizedPanelData.id === 'document' && 'Document'}
                     {minimizedPanelData.id === 'insights' && 'AI Insights'}
                     {minimizedPanelData.id === 'qa' && 'Q&A Assistant'}
                   </span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">(minimized)</span>
+                  <span className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:inline">(minimized)</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
                   <button
                     onClick={() => handlePanelExpand(minimizedPanelData.id)}
-                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
+                    className="p-1.5 md:p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
                     aria-label="Expand panel"
                   >
-                    <Maximize2 className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                    <Maximize2 className="w-3 md:w-4 h-3 md:h-4 text-gray-600 dark:text-gray-300" />
                   </button>
                   <button
                     onClick={() => setMinimizedPanel(null)}
-                    className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
+                    className="p-1.5 md:p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
                     aria-label="Restore panel"
                   >
-                    <Minimize2 className="w-4 h-4 text-gray-600 dark:text-gray-300 rotate-180" />
+                    <Minimize2 className="w-3 md:w-4 h-3 md:h-4 text-gray-600 dark:text-gray-300 rotate-180" />
                   </button>
                 </div>
               </div>

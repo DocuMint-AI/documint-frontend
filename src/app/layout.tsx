@@ -6,7 +6,7 @@ import { ThemeProvider } from '@/context/ThemeContext'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'DocuMint AI - Legal Document Analysis',
+  title: `${process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'} - Legal Document Analysis`,
   description: 'AI-powered legal document analysis and insights platform',
 }
 

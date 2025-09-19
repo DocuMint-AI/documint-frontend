@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Maximize2, Minimize2, MessageCircle, Send, Mic, Minus } from 'lucide-react';
+import { askQuestion } from '@/lib/api';
 
 interface QAPanelProps {
   expanded: boolean;
@@ -13,11 +14,14 @@ interface Message {
   type: 'question' | 'answer';
   text: string;
   timestamp: string;
+  confidence?: number;
 }
 
 const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => {
   const [question, setQuestion] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       type: 'question',
@@ -27,7 +31,8 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => 
     {
       type: 'answer',
       text: 'According to Section 2 of the agreement, the confidentiality obligation lasts for five (5) years from the date of disclosure.',
-      timestamp: '10:30 AM'
+      timestamp: '10:30 AM',
+      confidence: 0.9
     }
   ]);
 
@@ -42,7 +47,8 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => 
     {
       type: 'answer',
       text: 'Section 4 states that any breach would cause irreparable harm, and the Company can seek injunctive relief and other equitable remedies beyond monetary damages.',
-      timestamp: '10:32 AM'
+      timestamp: '10:32 AM',
+      confidence: 0.85
     },
     {
       type: 'question',
@@ -52,14 +58,26 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => 
     {
       type: 'answer',
       text: 'Yes, Section 3 allows either party to terminate with 30 days written notice. Upon termination, all confidential information must be returned or destroyed.',
-      timestamp: '10:35 AM'
+      timestamp: '10:35 AM',
+      confidence: 0.88
     }
   ];
 
+  useEffect(() => {
+    // Load current document ID
+    if (typeof window !== 'undefined') {
+      const currentDoc = localStorage.getItem('currentDocument');
+      if (currentDoc) {
+        const doc = JSON.parse(currentDoc);
+        setCurrentDocumentId(doc.id);
+      }
+    }
+  }, []);
+
   const displayMessages = expanded ? expandedMessages : messages;
 
-  const handleSendQuestion = () => {
-    if (question.trim()) {
+  const handleSendQuestion = async () => {
+    if (question.trim() && currentDocumentId) {
       const newQuestion: Message = {
         type: 'question',
         text: question,
@@ -68,21 +86,44 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => 
       
       setMessages(prev => [...prev, newQuestion]);
       setQuestion('');
+      setIsLoading(true);
       
-      // Simulate AI response
-      setTimeout(() => {
-        setMessages(prev => [...prev, {
+      try {
+        const response = await askQuestion(currentDocumentId, newQuestion.text);
+        
+        const answerMessage: Message = {
           type: 'answer',
-          text: 'I\'ll analyze the document to provide you with a comprehensive answer to your question.',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        }]);
-      }, 1000);
+          text: response.answer,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          confidence: response.confidence
+        };
+        
+        setMessages(prev => [...prev, answerMessage]);
+      } catch (error) {
+        const errorMessage: Message = {
+          type: 'answer',
+          text: 'Sorry, I encountered an error while processing your question. Please try again.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          confidence: 0
+        };
+        
+        setMessages(prev => [...prev, errorMessage]);
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
   const handleVoiceInput = () => {
     setIsRecording(!isRecording);
     // Voice recording logic would go here
+  };
+
+  const getConfidenceColor = (confidence?: number) => {
+    if (!confidence) return 'text-gray-400';
+    if (confidence >= 0.8) return 'text-green-600 dark:text-green-400';
+    if (confidence >= 0.6) return 'text-yellow-600 dark:text-yellow-400';
+    return 'text-red-600 dark:text-red-400';
   };
   
   return (
@@ -128,12 +169,33 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => 
                   {message.type === 'question' ? 'You' : 'AI Assistant'}
                 </span>
                 <span className="text-xs text-gray-400">{message.timestamp}</span>
+                {message.type === 'answer' && message.confidence !== undefined && (
+                  <span className={`text-xs font-medium ${getConfidenceColor(message.confidence)}`}>
+                    {Math.round(message.confidence * 100)}% confidence
+                  </span>
+                )}
               </div>
               <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                 {message.text}
               </p>
             </div>
           ))}
+          
+          {/* Loading indicator */}
+          {isLoading && (
+            <div className="bg-green-50/50 border-green-100 mr-8 dark:bg-green-900/20 dark:border-green-800 p-3 rounded-lg border">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-semibold text-gray-600 dark:text-gray-300">AI Assistant</span>
+                <span className="text-xs text-gray-400">Analyzing...</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                <span className="text-sm text-gray-600 dark:text-gray-400">Analyzing document...</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
@@ -145,8 +207,9 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => 
             placeholder="Ask a question about the document..."
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendQuestion()}
-            className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSendQuestion()}
+            disabled={isLoading}
+            className="flex-1 px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50"
           />
           <button
             onClick={handleVoiceInput}
@@ -161,7 +224,7 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => 
           </button>
           <button
             onClick={handleSendQuestion}
-            disabled={!question.trim()}
+            disabled={!question.trim() || isLoading}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center dark:disabled:bg-gray-600"
           >
             <Send className="w-4 h-4" />

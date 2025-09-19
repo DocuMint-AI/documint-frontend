@@ -10,8 +10,13 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setCurrentApiMode(getApiMode());
-    setIsLoading(false);
+    const loadApiMode = async () => {
+      const mode = await getApiMode();
+      setCurrentApiMode(mode);
+      setIsLoading(false);
+    };
+    
+    loadApiMode();
   }, []);
 
   const handleApiModeChange = (mode: 'mock' | 'real') => {
@@ -50,7 +55,7 @@ export default function SettingsPage() {
               </h1>
             </div>
             <p className="text-gray-600 dark:text-gray-400">
-              Configure your DocuMint AI experience and API preferences.
+              Configure your {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'} experience and API preferences.
             </p>
           </div>
 
@@ -181,11 +186,11 @@ export default function SettingsPage() {
             {/* About */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                About DocuMint AI
+                About {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'}
               </h2>
               <div className="space-y-4 text-sm text-gray-600 dark:text-gray-400">
                 <p>
-                  DocuMint AI is a powerful legal document analysis platform built with Next.js 14, 
+                  {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'} is a powerful legal document analysis platform built with Next.js 14, 
                   featuring AI-powered insights, risk assessment, and interactive Q&A capabilities.
                 </p>
                 <div className="grid md:grid-cols-2 gap-4 pt-4">

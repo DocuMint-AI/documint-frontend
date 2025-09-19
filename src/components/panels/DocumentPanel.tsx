@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Maximize2, Minimize2, FileText, Minus } from 'lucide-react';
 
 interface DocumentPanelProps {
@@ -9,8 +9,60 @@ interface DocumentPanelProps {
   onMinimize: () => void;
 }
 
+interface DocumentData {
+  text?: string;
+  filename?: string;
+  wordCount?: number;
+  pageCount?: number;
+}
+
 const DocumentPanel: React.FC<DocumentPanelProps> = ({ expanded, onExpand, onMinimize }) => {
-  const expandedContent = [
+  const [documentData, setDocumentData] = useState<DocumentData | null>(null);
+
+  useEffect(() => {
+    // Load document data from current document in localStorage
+    if (typeof window !== 'undefined') {
+      const currentDoc = localStorage.getItem('currentDocument');
+      if (currentDoc) {
+        const doc = JSON.parse(currentDoc);
+        
+        // Check if we have extracted text stored separately
+        const extractedDoc = localStorage.getItem(`document_${doc.id}`);
+        if (extractedDoc) {
+          const extracted = JSON.parse(extractedDoc);
+          setDocumentData({
+            text: extracted.text,
+            filename: extracted.filename,
+            wordCount: extracted.wordCount,
+            pageCount: extracted.pageCount
+          });
+        } else if (doc.analysis?.extractedText) {
+          setDocumentData({
+            text: doc.analysis.extractedText,
+            filename: doc.filename,
+            wordCount: doc.analysis.extractedText.split(/\s+/).length
+          });
+        } else {
+          // Fallback to default mock content
+          setDocumentData({
+            filename: doc.filename || 'Contract Agreement - NDA-2024-001'
+          });
+        }
+      }
+    }
+  }, []);
+
+  const mockContent = `This Non-Disclosure Agreement ("Agreement") is entered into on January 15, 2024, between TechCorp Solutions Inc., a Delaware corporation ("Company"), and John Smith, an individual ("Recipient").
+
+1. Definition of Confidential Information
+
+For purposes of this Agreement, "Confidential Information" shall include all non-public, proprietary or confidential information, technical data, trade secrets, know-how, research, product plans, products, services, customers, customer lists, markets, software, developments, inventions, processes, formulas, technology, designs, drawings, engineering, hardware configuration information, marketing, finances, or other business information disclosed by Company.
+
+2. Obligations of Receiving Party
+
+Recipient agrees to hold and maintain the Confidential Information in strict confidence for a period of five (5) years from the date of disclosure. Recipient shall not disclose any Confidential Information to third parties without the prior written consent of Company. Recipient shall use the same degree of care that it uses to protect its own confidential information, but in no event less than reasonable care.`;
+
+  const additionalMockContent = [
     {
       section: "3. Term and Termination",
       content: "This Agreement shall remain in effect until terminated by either party with thirty (30) days written notice. Upon termination, all Confidential Information must be returned or destroyed at the Company's discretion."
@@ -29,13 +81,23 @@ const DocumentPanel: React.FC<DocumentPanelProps> = ({ expanded, onExpand, onMin
     }
   ];
 
+  const displayText = documentData?.text || mockContent;
+  const displayParagraphs = displayText.split('\n\n').filter(p => p.trim());
+
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-600 bg-blue-50/30 dark:bg-blue-900/30">
         <div className="flex items-center gap-3">
           <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Document</h2>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Document</h2>
+            {documentData?.wordCount && (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {documentData.wordCount} words{documentData.pageCount ? ` • ${documentData.pageCount} pages` : ''}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -59,50 +121,29 @@ const DocumentPanel: React.FC<DocumentPanelProps> = ({ expanded, onExpand, onMin
       <div className="flex-1 p-4 overflow-auto">
         <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-lg p-4 space-y-4">
           <div>
-            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Contract Agreement - NDA-2024-001</p>
+            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              {documentData?.filename || 'Contract Agreement - NDA-2024-001'}
+            </p>
           </div>
           
           <div className="space-y-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-            <p>
-              This Non-Disclosure Agreement ("Agreement") is entered into on January 15, 2024, 
-              between TechCorp Solutions Inc., a Delaware corporation ("Company"), and John Smith, 
-              an individual ("Recipient").
-            </p>
-            
-            <div>
-              <p className="font-semibold mb-2">1. Definition of Confidential Information</p>
-              <p>
-                For purposes of this Agreement, "Confidential Information" shall include all non-public, 
-                proprietary or confidential information, technical data, trade secrets, know-how, 
-                research, product plans, products, services, customers, customer lists, markets, 
-                software, developments, inventions, processes, formulas, technology, designs, 
-                drawings, engineering, hardware configuration information, marketing, finances, 
-                or other business information disclosed by Company.
+            {displayParagraphs.slice(0, expanded ? displayParagraphs.length : 3).map((paragraph, index) => (
+              <p key={index} className="whitespace-pre-wrap">
+                {paragraph.trim()}
               </p>
-            </div>
+            ))}
             
-            <div>
-              <p className="font-semibold mb-2">2. Obligations of Receiving Party</p>
-              <p>
-                Recipient agrees to hold and maintain the Confidential Information in strict confidence 
-                for a period of five (5) years from the date of disclosure. Recipient shall not disclose 
-                any Confidential Information to third parties without the prior written consent of Company. 
-                Recipient shall use the same degree of care that it uses to protect its own confidential 
-                information, but in no event less than reasonable care.
-              </p>
-            </div>
-            
-            {/* Show additional content when expanded */}
-            {expanded && expandedContent.map((section, index) => (
+            {/* Show additional mock content when expanded and using fallback */}
+            {expanded && !documentData?.text && additionalMockContent.map((section, index) => (
               <div key={index}>
                 <p className="font-semibold mb-2">{section.section}</p>
                 <p>{section.content}</p>
               </div>
             ))}
             
-            {!expanded && (
+            {!expanded && displayParagraphs.length > 3 && (
               <p className="text-gray-500 dark:text-gray-400 italic">
-                [Document continues with additional clauses and terms...]
+                [Document continues with additional content...]
               </p>
             )}
           </div>
