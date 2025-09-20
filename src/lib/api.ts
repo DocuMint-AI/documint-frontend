@@ -8,6 +8,7 @@ const API_CONFIG = {
     upload: process.env.NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT || '/upload',
     processDocument: process.env.NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT || '/api/v1/process-document',
     qa: process.env.NEXT_PUBLIC_BACKEND_QA_ENDPOINT || '/api/v1/qa',
+    ocr: process.env.NEXT_PUBLIC_BACKEND_OCR_ENDPOINT || '/api/v1/ocr',
   },
   maxFileSize: parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '10485760'), // 10MB default
   supportedFormats: process.env.NEXT_PUBLIC_SUPPORTED_FORMATS?.split(',') || ['.pdf', '.doc', '.docx'],
@@ -45,6 +46,16 @@ export interface QAResponse {
   answer: string;
   confidence: number;
   sources?: string[];
+  error?: string;
+}
+
+export interface OCRResponse {
+  success: boolean;
+  documentId: string;
+  extractedText: string;
+  confidence: number;
+  pages?: number;
+  wordCount?: number;
   error?: string;
 }
 
@@ -354,6 +365,76 @@ export const askQuestion = async (documentId: string, question: string): Promise
       // Fallback to mock mode if real API fails
       localStorage.setItem('apiMode', 'mock');
       return askQuestion(documentId, question);
+    }
+  }
+};
+
+// OCR API for extracting text from documents
+export const extractTextFromDocument = async (documentId: string, file?: File): Promise<OCRResponse> => {
+  const apiMode = await getApiMode();
+  
+  if (apiMode === 'mock') {
+    await mockDelay(2000);
+    
+    // In mock mode, try to get extracted text from localStorage first
+    const storedDoc = typeof window !== 'undefined' ? 
+      localStorage.getItem(`document_${documentId}`) : null;
+    
+    if (storedDoc) {
+      const extractedDoc = JSON.parse(storedDoc) as ExtractedDocument;
+      return {
+        success: true,
+        documentId,
+        extractedText: extractedDoc.text,
+        confidence: 0.95,
+        pages: extractedDoc.pageCount,
+        wordCount: extractedDoc.wordCount
+      };
+    }
+    
+    // Fallback to mock extracted text if no stored document
+    const mockText = `This Non-Disclosure Agreement ("Agreement") is entered into on January 15, 2024, between TechCorp Solutions Inc., a Delaware corporation ("Company"), and John Smith, an individual ("Recipient").
+
+1. Definition of Confidential Information
+
+For purposes of this Agreement, "Confidential Information" shall include all non-public, proprietary or confidential information, technical data, trade secrets, know-how, research, product plans, products, services, customers, customer lists, markets, software, developments, inventions, processes, formulas, technology, designs, drawings, engineering, hardware configuration information, marketing, finances, or other business information disclosed by Company.
+
+2. Obligations of Receiving Party
+
+Recipient agrees to hold and maintain the Confidential Information in strict confidence for a period of five (5) years from the date of disclosure.`;
+    
+    return {
+      success: true,
+      documentId,
+      extractedText: mockText,
+      confidence: 0.92,
+      pages: 3,
+      wordCount: mockText.split(/\s+/).length
+    };
+  } else {
+    // Real API call
+    try {
+      const formData = new FormData();
+      formData.append('documentId', documentId);
+      if (file) {
+        formData.append('file', file);
+      }
+      
+      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.ocr}`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.log('Real API OCR failed, falling back to mock mode:', error);
+      // Fallback to mock mode if real API fails
+      localStorage.setItem('apiMode', 'mock');
+      return extractTextFromDocument(documentId, file);
     }
   }
 };

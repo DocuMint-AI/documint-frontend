@@ -80,6 +80,7 @@ src/
    NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT=/upload
    NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT=/api/v1/process-document
    NEXT_PUBLIC_BACKEND_QA_ENDPOINT=/api/v1/qa
+   NEXT_PUBLIC_BACKEND_OCR_ENDPOINT=/api/v1/ocr
    NEXT_PUBLIC_MAX_FILE_SIZE=10485760
    NEXT_PUBLIC_SUPPORTED_FORMATS=.pdf,.doc,.docx
    ```
@@ -125,6 +126,7 @@ NEXT_PUBLIC_BACKEND_BASE_URL=http://localhost:8000       # Backend server URL
 NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT=/upload              # File upload endpoint
 NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT=/api/v1/process-document  # Document processing endpoint
 NEXT_PUBLIC_BACKEND_QA_ENDPOINT=/api/v1/qa               # Q&A endpoint
+NEXT_PUBLIC_BACKEND_OCR_ENDPOINT=/api/v1/ocr             # OCR text extraction endpoint
 
 # Frontend Configuration
 NEXT_PUBLIC_FRONTEND_PORT=3000                           # Frontend development port
@@ -148,6 +150,7 @@ To connect to a real backend, enable "Real FastAPI Backend" in settings:
   - `POST ${NEXT_PUBLIC_BACKEND_BASE_URL}${NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT}` - File upload
   - `POST ${NEXT_PUBLIC_BACKEND_BASE_URL}${NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT}` - Document analysis
   - `POST ${NEXT_PUBLIC_BACKEND_BASE_URL}${NEXT_PUBLIC_BACKEND_QA_ENDPOINT}` - Question answering
+  - `POST ${NEXT_PUBLIC_BACKEND_BASE_URL}${NEXT_PUBLIC_BACKEND_OCR_ENDPOINT}` - OCR text extraction
 
 ## 🎨 Theming
 

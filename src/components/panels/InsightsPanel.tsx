@@ -9,9 +9,10 @@ interface InsightsPanelProps {
   expanded: boolean;
   onExpand: () => void;
   onMinimize: () => void;
+  canMinimize?: boolean;
 }
 
-const InsightsPanel: React.FC<InsightsPanelProps> = ({ expanded, onExpand, onMinimize }) => {
+const InsightsPanel: React.FC<InsightsPanelProps> = ({ expanded, onExpand, onMinimize, canMinimize = true }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [apiMode, setCurrentApiMode] = useState<'mock' | 'real'>('mock');
@@ -130,13 +131,15 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({ expanded, onExpand, onMin
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI Insights</h2>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={onMinimize}
-            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
-            aria-label="Minimize panel"
-          >
-            <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          </button>
+          {canMinimize && (
+            <button
+              onClick={onMinimize}
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
+              aria-label="Minimize panel"
+            >
+              <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+            </button>
+          )}
           <button
             onClick={onExpand}
             className="p-2 rounded-lg bg-purple-100 hover:bg-purple-200 dark:bg-purple-800 dark:hover:bg-purple-700 transition-colors duration-200"

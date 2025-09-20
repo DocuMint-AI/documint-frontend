@@ -2,11 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { Maximize2, Minimize2, FileText, Minus } from 'lucide-react';
+import { extractTextFromDocument, getApiMode } from '@/lib/api';
 
 interface DocumentPanelProps {
   expanded: boolean;
   onExpand: () => void;
   onMinimize: () => void;
+  canMinimize?: boolean;
 }
 
 interface DocumentData {
@@ -16,40 +18,81 @@ interface DocumentData {
   pageCount?: number;
 }
 
-const DocumentPanel: React.FC<DocumentPanelProps> = ({ expanded, onExpand, onMinimize }) => {
+const DocumentPanel: React.FC<DocumentPanelProps> = ({ expanded, onExpand, onMinimize, canMinimize = true }) => {
   const [documentData, setDocumentData] = useState<DocumentData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiMode, setApiModeState] = useState<'mock' | 'real'>('mock');
 
   useEffect(() => {
-    // Load document data from current document in localStorage
-    if (typeof window !== 'undefined') {
-      const currentDoc = localStorage.getItem('currentDocument');
-      if (currentDoc) {
+    const loadDocumentData = async () => {
+      setIsLoading(true);
+      
+      // Load document data from current document in localStorage
+      if (typeof window !== 'undefined') {
+        const currentDoc = localStorage.getItem('currentDocument');
+        if (!currentDoc) {
+          setIsLoading(false);
+          return;
+        }
+
         const doc = JSON.parse(currentDoc);
-        
-        // Check if we have extracted text stored separately
-        const extractedDoc = localStorage.getItem(`document_${doc.id}`);
-        if (extractedDoc) {
-          const extracted = JSON.parse(extractedDoc);
-          setDocumentData({
-            text: extracted.text,
-            filename: extracted.filename,
-            wordCount: extracted.wordCount,
-            pageCount: extracted.pageCount
-          });
-        } else if (doc.analysis?.extractedText) {
-          setDocumentData({
-            text: doc.analysis.extractedText,
-            filename: doc.filename,
-            wordCount: doc.analysis.extractedText.split(/\s+/).length
-          });
+        const currentApiMode = await getApiMode();
+        setApiModeState(currentApiMode);
+
+        if (currentApiMode === 'real') {
+          // In real mode, call OCR endpoint to get extracted text
+          try {
+            const ocrResponse = await extractTextFromDocument(doc.id);
+            if (ocrResponse.success) {
+              setDocumentData({
+                text: ocrResponse.extractedText,
+                filename: doc.filename,
+                wordCount: ocrResponse.wordCount,
+                pageCount: ocrResponse.pages
+              });
+            } else {
+              // Fall back to stored data if OCR fails
+              handleFallbackData(doc);
+            }
+          } catch (error) {
+            console.error('OCR extraction failed:', error);
+            handleFallbackData(doc);
+          }
         } else {
-          // Fallback to default mock content
-          setDocumentData({
-            filename: doc.filename || 'Contract Agreement - NDA-2024-001'
-          });
+          // In mock mode, use existing logic
+          handleFallbackData(doc);
         }
       }
-    }
+      
+      setIsLoading(false);
+    };
+
+    const handleFallbackData = (doc: any) => {
+      // Check if we have extracted text stored separately
+      const extractedDoc = localStorage.getItem(`document_${doc.id}`);
+      if (extractedDoc) {
+        const extracted = JSON.parse(extractedDoc);
+        setDocumentData({
+          text: extracted.text,
+          filename: extracted.filename,
+          wordCount: extracted.wordCount,
+          pageCount: extracted.pageCount
+        });
+      } else if (doc.analysis?.extractedText) {
+        setDocumentData({
+          text: doc.analysis.extractedText,
+          filename: doc.filename,
+          wordCount: doc.analysis.extractedText.split(/\s+/).length
+        });
+      } else {
+        // Fallback to default mock content
+        setDocumentData({
+          filename: doc.filename || 'Contract Agreement - NDA-2024-001'
+        });
+      }
+    };
+
+    loadDocumentData();
   }, []);
 
   const mockContent = `This Non-Disclosure Agreement ("Agreement") is entered into on January 15, 2024, between TechCorp Solutions Inc., a Delaware corporation ("Company"), and John Smith, an individual ("Recipient").
@@ -100,13 +143,15 @@ Recipient agrees to hold and maintain the Confidential Information in strict con
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={onMinimize}
-            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
-            aria-label="Minimize panel"
-          >
-            <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          </button>
+          {canMinimize && (
+            <button
+              onClick={onMinimize}
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
+              aria-label="Minimize panel"
+            >
+              <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+            </button>
+          )}
           <button
             onClick={onExpand}
             className="p-2 rounded-lg bg-blue-100 hover:bg-blue-200 dark:bg-blue-800 dark:hover:bg-blue-700 transition-colors duration-200"
@@ -124,27 +169,45 @@ Recipient agrees to hold and maintain the Confidential Information in strict con
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               {documentData?.filename || 'Contract Agreement - NDA-2024-001'}
             </p>
+            {apiMode === 'real' && (
+              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                  Real API • OCR Processed
+                </span>
+              </div>
+            )}
           </div>
           
           <div className="space-y-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-            {displayParagraphs.slice(0, expanded ? displayParagraphs.length : 3).map((paragraph, index) => (
-              <p key={index} className="whitespace-pre-wrap">
-                {paragraph.trim()}
-              </p>
-            ))}
-            
-            {/* Show additional mock content when expanded and using fallback */}
-            {expanded && !documentData?.text && additionalMockContent.map((section, index) => (
-              <div key={index}>
-                <p className="font-semibold mb-2">{section.section}</p>
-                <p>{section.content}</p>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-500">
+                  {apiMode === 'real' ? 'Processing document with OCR...' : 'Loading document...'}
+                </span>
               </div>
-            ))}
-            
-            {!expanded && displayParagraphs.length > 3 && (
-              <p className="text-gray-500 dark:text-gray-400 italic">
-                [Document continues with additional content...]
-              </p>
+            ) : (
+              <>
+                {displayParagraphs.slice(0, expanded ? displayParagraphs.length : 3).map((paragraph, index) => (
+                  <p key={index} className="whitespace-pre-wrap">
+                    {paragraph.trim()}
+                  </p>
+                ))}
+                
+                {/* Show additional mock content when expanded and using fallback */}
+                {expanded && !documentData?.text && additionalMockContent.map((section, index) => (
+                  <div key={index}>
+                    <p className="font-semibold mb-2">{section.section}</p>
+                    <p>{section.content}</p>
+                  </div>
+                ))}
+                
+                {!expanded && displayParagraphs.length > 3 && (
+                  <p className="text-gray-500 dark:text-gray-400 italic">
+                    [Document continues with additional content...]
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>

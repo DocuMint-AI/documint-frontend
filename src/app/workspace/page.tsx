@@ -16,6 +16,7 @@ interface Panel {
     expanded: boolean;
     onExpand: () => void;
     onMinimize: () => void;
+    canMinimize?: boolean;
   }>;
 }
 
@@ -107,11 +108,28 @@ export default function WorkspacePage() {
   // Handle panel minimization
   const handlePanelMinimize = (panelId: string) => {
     const newMinimized = new Set(minimizedPanels);
+    
+    // Prevent minimizing all panels - ensure at least one panel remains visible
+    const currentlyVisible = panels.filter(panel => !minimizedPanels.has(panel.id));
+    if (currentlyVisible.length <= 1 && !newMinimized.has(panelId)) {
+      // Don't allow minimizing the last visible panel
+      return;
+    }
+    
     if (newMinimized.has(panelId)) {
       newMinimized.delete(panelId);
     } else {
       newMinimized.add(panelId);
     }
+    
+    // Always reset panel widths to default when minimizing any panel
+    // This prevents overflow issues and provides consistent behavior
+    const willBeVisible = panels.filter(panel => !newMinimized.has(panel.id));
+    const wasExpanded = expandedPanel !== null;
+    
+    // Simple solution: Always reset to default 33.33% widths when minimizing
+    setPanelWidths([33.33, 33.33, 33.34]);
+    
     setMinimizedPanels(newMinimized);
     setExpandedPanel(null);
   };
@@ -120,89 +138,134 @@ export default function WorkspacePage() {
   const handlePanelRestore = (panelId: string) => {
     const newMinimized = new Set(minimizedPanels);
     newMinimized.delete(panelId);
+    
+    // Handle width transitions when restoring panels
+    const currentlyVisible = panels.filter(panel => !minimizedPanels.has(panel.id));
+    const willBeVisible = panels.filter(panel => !newMinimized.has(panel.id));
+    const wasExpanded = expandedPanel !== null;
+    
+    if (wasExpanded || (currentlyVisible.length === 2 && willBeVisible.length === 3)) {
+      // Going from 2 to 3 panels or from expanded state - reset to equal distribution
+      setPanelWidths([33.33, 33.33, 33.34]);
+    }
+    
     setMinimizedPanels(newMinimized);
+    setExpandedPanel(null); // Clear any expanded state when restoring
   };
   
   // Handle panel resizing
   const handleResize = useCallback((dividerIndex: number, clientX: number) => {
-    if (!containerRef.current || expandedPanel || minimizedPanels.size > 0 || isMobile) return;
+    if (!containerRef.current || expandedPanel || isMobile) return;
     
     const containerRect = containerRef.current.getBoundingClientRect();
     const containerWidth = containerRect.width;
     const relativeX = clientX - containerRect.left;
     const percentage = (relativeX / containerWidth) * 100;
     
+    const visiblePanelsCount = panels.filter(panel => !minimizedPanels.has(panel.id)).length;
+    
     setPanelWidths(prev => {
       const newWidths = [...prev];
       
-      // Minimum and maximum widths for better UX and prevent overflow
-      const minWidth = 25; // Increased from 15% to prevent panels becoming too small
-      const maxWidth = 60; // Reduced from 70% to prevent panels becoming too large
+      // Minimum and maximum widths for better UX - more flexible for smaller screens
+      const minWidth = 20; // Reduced from 25% to allow tighter layouts
+      const maxWidth = 70; // Increased from 60% to allow more flexibility
       
-      if (dividerIndex === 0) {
-        // First divider: controls first panel width
-        const constrainedPercentage = Math.max(minWidth, Math.min(maxWidth, percentage));
-        
-        newWidths[0] = constrainedPercentage;
-        
-        // Ensure remaining panels have adequate space
-        const remainingSpace = 100 - constrainedPercentage;
-        const minRemainingEach = minWidth;
-        
-        if (remainingSpace >= minRemainingEach * 2) {
-          // Distribute remaining space between panels 1 and 2, keeping their ratio
-          const currentTotal = newWidths[1] + newWidths[2];
-          if (currentTotal > 0) {
-            const ratio1 = newWidths[1] / currentTotal;
-            const ratio2 = newWidths[2] / currentTotal;
-            newWidths[1] = remainingSpace * ratio1;
-            newWidths[2] = remainingSpace * ratio2;
-          } else {
-            // Equal distribution if no previous ratio
-            newWidths[1] = remainingSpace / 2;
-            newWidths[2] = remainingSpace / 2;
+      if (visiblePanelsCount === 2) {
+        // Handle 2-panel resizing
+        if (dividerIndex === 0) {
+          // Only one divider for 2 panels
+          const constrainedPercentage = Math.max(minWidth, Math.min(100 - minWidth, percentage));
+          
+          // Find the indices of visible panels
+          const visiblePanelIndices = panels
+            .map((panel, index) => ({ panel, index }))
+            .filter(item => !minimizedPanels.has(item.panel.id))
+            .map(item => item.index);
+            
+          if (visiblePanelIndices.length === 2) {
+            newWidths[visiblePanelIndices[0]] = constrainedPercentage;
+            newWidths[visiblePanelIndices[1]] = 100 - constrainedPercentage;
           }
-        } else {
-          // Force equal minimum distribution
-          newWidths[1] = minRemainingEach;
-          newWidths[2] = remainingSpace - minRemainingEach;
         }
-        
-      } else if (dividerIndex === 1) {
-        // Second divider: controls second panel width relative to combined first two panels
-        const maxSecondDividerPos = 100 - minWidth; // Leave space for third panel
-        const constrainedPercentage = Math.max(newWidths[0] + minWidth, Math.min(maxSecondDividerPos, percentage));
-        
-        // Calculate new second panel width
-        const newSecondWidth = constrainedPercentage - newWidths[0];
-        
-        // Ensure second panel meets minimum requirements
-        if (newSecondWidth >= minWidth) {
-          newWidths[1] = newSecondWidth;
-          newWidths[2] = Math.max(minWidth, 100 - constrainedPercentage);
+      } else if (visiblePanelsCount === 3) {
+        // Handle 3-panel resizing (existing logic)
+        if (dividerIndex === 0) {
+          // First divider: controls first panel width
+          const constrainedPercentage = Math.max(minWidth, Math.min(maxWidth, percentage));
+          
+          newWidths[0] = constrainedPercentage;
+          
+          // Ensure remaining panels have adequate space
+          const remainingSpace = 100 - constrainedPercentage;
+          const minRemainingEach = minWidth;
+          
+          if (remainingSpace >= minRemainingEach * 2) {
+            // Distribute remaining space between panels 1 and 2, keeping their ratio
+            const currentTotal = newWidths[1] + newWidths[2];
+            if (currentTotal > 0) {
+              const ratio1 = newWidths[1] / currentTotal;
+              const ratio2 = newWidths[2] / currentTotal;
+              newWidths[1] = remainingSpace * ratio1;
+              newWidths[2] = remainingSpace * ratio2;
+            } else {
+              // Equal distribution if no previous ratio
+              newWidths[1] = remainingSpace / 2;
+              newWidths[2] = remainingSpace / 2;
+            }
+          } else {
+            // Force equal minimum distribution
+            newWidths[1] = minRemainingEach;
+            newWidths[2] = remainingSpace - minRemainingEach;
+          }
+          
+        } else if (dividerIndex === 1) {
+          // Second divider: controls second panel width relative to combined first two panels
+          const maxSecondDividerPos = 100 - minWidth; // Leave space for third panel
+          const constrainedPercentage = Math.max(newWidths[0] + minWidth, Math.min(maxSecondDividerPos, percentage));
+          
+          // Calculate new second panel width
+          const newSecondWidth = constrainedPercentage - newWidths[0];
+          
+          // Ensure second panel meets minimum requirements
+          if (newSecondWidth >= minWidth) {
+            newWidths[1] = newSecondWidth;
+            newWidths[2] = Math.max(minWidth, 100 - constrainedPercentage);
+          }
         }
       }
       
-      // Final validation: ensure all panels meet minimum requirements
+      // Final validation: ensure all panels meet minimum requirements and don't exceed 100%
       const totalWidth = newWidths[0] + newWidths[1] + newWidths[2];
       if (Math.abs(totalWidth - 100) > 0.1) { // Allow small floating point errors
-        // Normalize to 100%
+        // Normalize to exactly 100% to prevent overflow
         const factor = 100 / totalWidth;
         newWidths[0] *= factor;
         newWidths[1] *= factor;
         newWidths[2] *= factor;
       }
       
-      // Ensure no panel is below minimum width
-      for (let i = 0; i < newWidths.length; i++) {
+      // Ensure no panel is below minimum width for visible panels
+      const visiblePanelIndices = panels
+        .map((panel, index) => ({ panel, index }))
+        .filter(item => !minimizedPanels.has(item.panel.id))
+        .map(item => item.index);
+        
+      for (const i of visiblePanelIndices) {
         if (newWidths[i] < minWidth) {
           return prev; // Return previous state if constraints can't be met
         }
       }
       
+      // Final safety check: ensure total visible width doesn't exceed 100%
+      const visibleTotalWidth = visiblePanelIndices.reduce((sum, i) => sum + newWidths[i], 0);
+      if (visibleTotalWidth > 100) {
+        return prev; // Return previous state to prevent overflow
+      }
+      
       return newWidths;
     });
-  }, [expandedPanel, minimizedPanels, isMobile]);
+  }, [expandedPanel, minimizedPanels, isMobile, panels]);
 
   // Get visible panels based on state
   const getVisiblePanels = () => {
@@ -307,17 +370,17 @@ export default function WorkspacePage() {
           {/* Top panels area */}
           <div
             ref={containerRef}
-            className={`flex-1 bg-gray-100/50 dark:bg-gray-950 p-2 md:p-4 gap-1 md:gap-2 min-h-0 overflow-auto workspace-container ${
-              isMobile ? 'flex flex-col' : 'flex'
+            className={`flex-1 bg-gray-100/50 dark:bg-gray-950 p-2 md:p-4 gap-1 md:gap-2 min-h-0 workspace-container ${
+              isMobile ? 'flex flex-col overflow-auto' : 'flex overflow-hidden'
             }`}
             style={!isMobile ? { 
-              minWidth: visiblePanels.length === 3 ? '900px' : visiblePanels.length === 2 ? '600px' : '320px',
-              overflowX: 'auto'
+              overflowX: 'hidden' // Prevent horizontal scrolling
             } : {}}
           >
             {visiblePanels.map((panel, index) => {
               const Component = panel.component;
               const isExpanded = expandedPanel === panel.id;
+              const canMinimize = visiblePanels.length > 1; // Can only minimize if more than 1 panel is visible
               
               // Mobile-first responsive width calculation
               let width;
@@ -336,7 +399,30 @@ export default function WorkspacePage() {
                   if (visibleCount === 1) {
                     width = '100%';
                   } else if (visibleCount === 2) {
-                    width = '50%';
+                    // For 2 panels, ensure they share the full width
+                    const visiblePanelIds = visiblePanels.map(p => p.id);
+                    const currentPanelVisibleIndex = visiblePanelIds.indexOf(panel.id);
+                    
+                    // Get the indices of the visible panels in the original panels array
+                    const visiblePanelIndices = panels
+                      .map((p, i) => ({ panel: p, index: i }))
+                      .filter(item => !minimizedPanels.has(item.panel.id))
+                      .map(item => item.index);
+                    
+                    if (visiblePanelIndices.length === 2) {
+                      // Calculate widths ensuring they add up to 100%
+                      const width1 = panelWidths[visiblePanelIndices[0]];
+                      const width2 = panelWidths[visiblePanelIndices[1]];
+                      const totalWidth = width1 + width2;
+                      
+                      if (currentPanelVisibleIndex === 0) {
+                        width = `${totalWidth > 0 ? (width1 / totalWidth) * 100 : 50}%`;
+                      } else {
+                        width = `${totalWidth > 0 ? (width2 / totalWidth) * 100 : 50}%`;
+                      }
+                    } else {
+                      width = '50%'; // fallback
+                    }
                   } else {
                     width = `${panelWidths[panels.findIndex(p => p.id === panel.id)]}%`;
                   }
@@ -350,7 +436,6 @@ export default function WorkspacePage() {
                     className={className}
                     style={{
                       width,
-                      minWidth: isMobile ? '100%' : (isExpanded ? '100%' : visiblePanels.length === 1 ? '100%' : '280px'),
                       maxWidth: isMobile ? '100%' : (isExpanded ? '100%' : '70%'),
                       height: isMobile ? '100%' : 'auto'
                     }}
@@ -359,11 +444,12 @@ export default function WorkspacePage() {
                       expanded={isExpanded}
                       onExpand={() => handlePanelExpand(panel.id)}
                       onMinimize={() => handlePanelMinimize(panel.id)}
+                      canMinimize={canMinimize}
                     />
                   </div>
                   
                   {/* Resizable Divider - Desktop only */}
-                  {!isMobile && index < visiblePanels.length - 1 && !expandedPanel && minimizedPanels.size === 0 && visiblePanels.length === 3 && (
+                  {!isMobile && index < visiblePanels.length - 1 && !expandedPanel && visiblePanels.length >= 2 && (
                     <ResizableDivider
                       onResize={(clientX) => handleResize(index, clientX)}
                     />

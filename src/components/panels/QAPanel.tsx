@@ -8,6 +8,7 @@ interface QAPanelProps {
   expanded: boolean;
   onExpand: () => void;
   onMinimize: () => void;
+  canMinimize?: boolean;
 }
 
 interface Message {
@@ -17,7 +18,7 @@ interface Message {
   confidence?: number;
 }
 
-const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => {
+const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize, canMinimize = true }) => {
   const [question, setQuestion] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -126,13 +127,15 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize }) => 
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Q&A Assistant</h2>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={onMinimize}
-            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
-            aria-label="Minimize panel"
-          >
-            <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          </button>
+          {canMinimize && (
+            <button
+              onClick={onMinimize}
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors duration-200"
+              aria-label="Minimize panel"
+            >
+              <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+            </button>
+          )}
           <button
             onClick={onExpand}
             className="p-2 rounded-lg bg-green-100 hover:bg-green-200 dark:bg-green-800 dark:hover:bg-green-700 transition-colors duration-200"
