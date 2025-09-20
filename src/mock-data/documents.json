@@ -1,0 +1,28 @@
+{
+  "documents": [
+    {
+      "id": "sample-contract-001",
+      "filename": "Service_Agreement_2024.pdf",
+      "text": "SERVICE AGREEMENT\n\nThis Service Agreement (\"Agreement\") is entered into on [DATE], between [CLIENT COMPANY], a corporation organized under the laws of Delaware (\"Client\"), and [SERVICE PROVIDER], a limited liability company organized under the laws of California (\"Provider\").\n\n1. SERVICES\nProvider agrees to perform the services described in Schedule A attached hereto and incorporated by reference (\"Services\"). Provider shall perform the Services in a professional and workmanlike manner consistent with industry standards.\n\n2. COMPENSATION\nIn consideration for the Services, Client shall pay Provider the fees set forth in Schedule A. Payment terms are Net 60 days from invoice date. Late payments may be subject to a 1.5% monthly service charge.\n\n3. TERM AND TERMINATION\nThis Agreement shall commence on the Effective Date and continue until terminated by either party upon thirty (30) days written notice. Either party may terminate immediately for material breach that remains uncured after ten (10) days written notice.\n\n4. CONFIDENTIALITY\nProvider acknowledges that it may have access to confidential information of Client. Provider agrees to maintain all confidential information in strict confidence for a period of five (5) years following termination of this Agreement.\n\n5. INTELLECTUAL PROPERTY\nAll work product, deliverables, and materials created by Provider under this Agreement shall be owned exclusively by Client. Provider hereby assigns all rights, title, and interest in such work product to Client.\n\n6. INDEMNIFICATION\nProvider agrees to indemnify, defend, and hold harmless Client from and against any and all claims, damages, losses, costs, and expenses (including reasonable attorneys' fees) arising from or relating to Provider's performance of the Services, including but not limited to claims of third parties.\n\n7. LIMITATION OF LIABILITY\nIn no event shall either party's liability exceed $10,000 in the aggregate. Neither party shall be liable for any indirect, incidental, special, consequential, or punitive damages.\n\n8. FORCE MAJEURE\nNeither party shall be liable for any delay or failure to perform due to causes beyond its reasonable control, including but not limited to acts of God, war, terrorism, or government action.\n\n9. GOVERNING LAW\nThis Agreement shall be governed by and construed in accordance with the laws of the State of Delaware, without regard to conflict of law principles. Any disputes shall be resolved in the courts of Delaware.\n\n10. ENTIRE AGREEMENT\nThis Agreement constitutes the entire agreement between the parties and supersedes all prior negotiations, representations, and agreements relating to the subject matter hereof.\n\nIN WITNESS WHEREOF, the parties have executed this Agreement as of the date first written above.\n\n[SIGNATURE BLOCKS]",
+      "wordCount": 384,
+      "pageCount": 3,
+      "fileSize": 2457600
+    },
+    {
+      "id": "sample-contract-002", 
+      "filename": "Employment_Contract_Manager.docx",
+      "text": "EMPLOYMENT AGREEMENT\n\nThis Employment Agreement (\"Agreement\") is made between TechCorp Industries, Inc., a Delaware corporation (\"Company\"), and John Smith (\"Employee\").\n\n1. POSITION AND DUTIES\nEmployee is hired as Senior Project Manager and shall perform duties typically associated with such position, including project oversight, team coordination, and client communication.\n\n2. COMPENSATION\nEmployee shall receive an annual salary of $95,000, payable bi-weekly. Employee is eligible for annual performance bonuses at Company's discretion.\n\n3. BENEFITS\nEmployee is entitled to health insurance, dental coverage, 401(k) participation with company matching, and 15 days paid vacation annually.\n\n4. CONFIDENTIALITY AND NON-COMPETE\nEmployee agrees not to disclose confidential information and shall not compete with Company for 12 months following termination within a 50-mile radius.\n\n5. TERMINATION\nEmployment may be terminated by either party with two weeks' notice. Company may terminate immediately for cause.\n\nThis Agreement is governed by California law.\n\n[SIGNATURE BLOCKS]",
+      "wordCount": 156,
+      "pageCount": 2,
+      "fileSize": 1048576
+    },
+    {
+      "id": "sample-contract-003",
+      "filename": "Software_License_Agreement.pdf", 
+      "text": "SOFTWARE LICENSE AGREEMENT\n\nThis Software License Agreement (\"Agreement\") is between SoftwareCorp LLC (\"Licensor\") and Enterprise Client Inc. (\"Licensee\").\n\n1. GRANT OF LICENSE\nLicensor grants Licensee a non-exclusive, non-transferable license to use the Software for internal business purposes only.\n\n2. RESTRICTIONS\nLicensee may not modify, reverse engineer, or distribute the Software. Maximum of 100 concurrent users.\n\n3. FEES AND PAYMENT\nLicense fee is $50,000 annually, payable in advance. Late payments incur 2% monthly penalty.\n\n4. SUPPORT AND MAINTENANCE\nLicensor provides 24/7 technical support and quarterly software updates during the license term.\n\n5. WARRANTY DISCLAIMER\nSOFTWARE IS PROVIDED 'AS IS' WITHOUT WARRANTY OF ANY KIND.\n\n6. LIMITATION OF LIABILITY\nLicensor's total liability shall not exceed the annual license fee.\n\n7. TERM\nThis Agreement is effective for one (1) year and automatically renews unless terminated with 90 days notice.\n\nGoverned by laws of New York.\n\n[SIGNATURE BLOCKS]",
+      "wordCount": 187,
+      "pageCount": 2,
+      "fileSize": 1843200
+    }
+  ]
+}

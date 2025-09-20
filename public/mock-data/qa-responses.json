@@ -1,0 +1,40 @@
+{
+  "responses": [
+    {
+      "question": "What are the main risks in this contract?",
+      "answer": "The primary risks include broad indemnification clauses that could expose your company to third-party liability, a narrow force majeure clause that may not protect against modern risks like cyber attacks, and insufficient limitation of liability caps. The payment terms of Net 60 days also pose cash flow risks.",
+      "confidence": 0.92,
+      "sources": ["Section 8: Indemnification", "Section 12: Force Majeure", "Section 15: Limitation of Liability"]
+    },
+    {
+      "question": "How long is the contract term?",
+      "answer": "The contract does not specify a fixed term length. It appears to be an ongoing agreement that can be terminated by either party with proper notice, though the specific notice requirements need clarification for compliance purposes.",
+      "confidence": 0.78,
+      "sources": ["Section 10: Term and Termination"]
+    },
+    {
+      "question": "What are the payment terms?",
+      "answer": "Payment terms are Net 60 days from invoice date. This is longer than the typical 30-day standard and may impact your cash flow. Consider negotiating for shorter payment terms like Net 30 or even Net 15 days to improve working capital management.",
+      "confidence": 0.95,
+      "sources": ["Section 6: Payment Terms", "Schedule A: Fee Structure"]
+    },
+    {
+      "question": "Who owns the intellectual property?",
+      "answer": "The intellectual property ownership is clearly defined in favor of the client. All work product, deliverables, and materials created under this agreement will be owned by the client company, with the service provider retaining only the right to use for internal business improvement purposes.",
+      "confidence": 0.89,
+      "sources": ["Section 7: Intellectual Property Rights"]
+    },
+    {
+      "question": "What happens if there's a dispute?",
+      "answer": "Disputes are governed by Delaware law and must be resolved through litigation in Delaware courts. However, the contract lacks a mediation or arbitration clause, which could lead to higher resolution costs. Consider adding alternative dispute resolution mechanisms.",
+      "confidence": 0.84,
+      "sources": ["Section 14: Governing Law and Jurisdiction"]
+    },
+    {
+      "question": "Are there any confidentiality requirements?",
+      "answer": "Yes, the contract includes comprehensive confidentiality provisions that protect sensitive business information for a period of 5 years after contract termination. The clause includes appropriate carve-outs for publicly available information and independently developed materials.",
+      "confidence": 0.91,
+      "sources": ["Section 9: Confidentiality and Non-Disclosure"]
+    }
+  ]
+}

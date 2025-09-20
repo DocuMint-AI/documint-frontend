@@ -85,9 +85,9 @@ Recipient agrees to hold and maintain the Confidential Information in strict con
   const displayParagraphs = displayText.split('\n\n').filter(p => p.trim());
 
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div className="h-full flex flex-col bg-white/15 dark:bg-gray-900/15 rounded-lg shadow-lg border-2 border-white/30 dark:border-gray-600/40">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-600 bg-blue-50/30 dark:bg-blue-900/30">
+      <div className="flex items-center justify-between p-4 border-b-2 border-gray-100/30 dark:border-gray-700/30 bg-blue-50/20 dark:bg-blue-900/20">
         <div className="flex items-center gap-3">
           <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           <div>
@@ -119,7 +119,7 @@ Recipient agrees to hold and maintain the Confidential Information in strict con
       
       {/* Content */}
       <div className="flex-1 p-4 overflow-auto">
-        <div className="bg-gray-50/50 dark:bg-gray-700/50 rounded-lg p-4 space-y-4">
+        <div className="bg-gray-50/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-lg p-4 space-y-4 border border-gray-200/20 dark:border-gray-600/20">
           <div>
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               {documentData?.filename || 'Contract Agreement - NDA-2024-001'}

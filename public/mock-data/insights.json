@@ -1,0 +1,55 @@
+{
+  "insights": [
+    {
+      "type": "Risk",
+      "level": "High",
+      "text": "This contract contains broad indemnification clauses that could expose your company to significant liability for third-party claims, including those arising from the other party's negligence.",
+      "color": "red"
+    },
+    {
+      "type": "Compliance",
+      "level": "Medium", 
+      "text": "The termination clause lacks proper notice requirements and may not comply with local employment law standards for contract termination procedures.",
+      "color": "yellow"
+    },
+    {
+      "type": "Legal",
+      "level": "High",
+      "text": "The force majeure clause is too narrow and may not adequately protect against unforeseen circumstances like pandemics, cyber attacks, or supply chain disruptions.",
+      "color": "red"
+    },
+    {
+      "type": "Financial",
+      "level": "Medium",
+      "text": "Payment terms specify Net 60 days which may impact cash flow. Consider negotiating shorter payment periods to improve working capital.",
+      "color": "yellow"
+    },
+    {
+      "type": "Operational",
+      "level": "Low",
+      "text": "The intellectual property ownership clause clearly defines work product ownership, which reduces potential disputes over IP rights.",
+      "color": "green"
+    },
+    {
+      "type": "Risk",
+      "level": "Medium",
+      "text": "Limitation of liability cap is set at $10,000 which may be insufficient given the scope and value of services outlined in the contract.",
+      "color": "yellow"
+    },
+    {
+      "type": "Compliance",
+      "level": "Low",
+      "text": "Confidentiality provisions include appropriate carve-outs for publicly available information and independently developed materials.",
+      "color": "green"
+    },
+    {
+      "type": "Legal",
+      "level": "Medium",
+      "text": "Governing law clause specifies Delaware jurisdiction, but dispute resolution mechanism should include mediation before litigation to reduce costs.",
+      "color": "yellow"
+    }
+  ],
+  "summary": "This legal document contains several high-risk provisions that require immediate attention, particularly around indemnification and force majeure clauses. The contract shows moderate compliance with standard business practices but has room for improvement in termination procedures and dispute resolution mechanisms. Key strengths include clear IP ownership definitions and appropriate confidentiality protections.",
+  "riskScore": 7.2,
+  "complianceScore": 6.8
+}

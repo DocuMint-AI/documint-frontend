@@ -23,9 +23,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm sticky top-0 z-40">
+      <header className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-14 md:h-16">
             {/* Logo */}
@@ -65,7 +65,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 );
               })}
               
-              <div className="ml-2 pl-2 border-l border-gray-200 dark:border-gray-600">
+              <div className="ml-2 pl-2 border-l border-gray-200 dark:border-gray-800">
                 <ThemeToggle />
               </div>
             </nav>
@@ -89,7 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* Mobile Navigation */}
           {isMobileMenuOpen && (
-            <div className="md:hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 animate-slide-up">
+            <div className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 animate-slide-up">
               <nav className="px-2 py-3 space-y-1">
                 {navigation.map((item) => {
                   const Icon = item.icon;

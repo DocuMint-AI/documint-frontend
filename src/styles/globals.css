@@ -13,14 +13,301 @@
 }
 
 .dark .glass-effect {
-  background: rgba(31, 41, 55, 0.8);
+  background: rgba(0, 0, 0, 0.9);
 }
 
-/* Pixel OS inspired theme improvements */
+/* Stars background for dark mode */
+.stars-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.stars-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, #fff, transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 160px 30px, #fff, transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+  animation: sparkle 20s linear infinite;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+@keyframes sparkle {
+  from { transform: translateX(0); }
+  to { transform: translateX(200px); }
+}
+
+/* Animated gradient blobs */
+.blurry-section {
+  position: relative;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.gradient-blob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle at center, #ff6ec4, #7873f5);
+  transform: translate(-50%, -50%);
+  filter: blur(120px);
+  opacity: 0.15;
+  z-index: -1;
+  border-radius: 45% 55% 65% 35% / 35% 45% 55% 65%;
+  animation: floatBlob 10s ease-in-out infinite, morphBlob 8s ease-in-out infinite;
+}
+
+/* Multi Blob Base */
+.multi-blob {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  filter: blur(80px);
+  opacity: 0.1;
+  border-radius: 45% 55% 65% 35% / 35% 45% 55% 65%;
+  z-index: -1;
+}
+
+/* First Blob Animation */
+.multi-blob-1 {
+  top: 20%;
+  left: 30%;
+  background: radial-gradient(circle at center, #60a5fa, #3b82f6);
+  animation: floatBlobOne 12s ease-in-out infinite alternate, morphBlob 8s ease-in-out infinite alternate;
+}
+
+/* Second Blob Animation */
+.multi-blob-2 {
+  top: 60%;
+  left: 65%;
+  background: radial-gradient(circle at center, #a78bfa, #8b5cf6);
+  animation: floatBlobTwo 14s ease-in-out infinite alternate, morphBlob 9s ease-in-out infinite alternate;
+}
+
+/* Third Blob Animation */
+.multi-blob-3 {
+  top: 40%;
+  left: 10%;
+  background: radial-gradient(circle at center, #34d399, #10b981);
+  animation: floatBlobThree 16s ease-in-out infinite alternate, morphBlob 10s ease-in-out infinite alternate;
+}
+
+/* Keyframes for blob animation */
+@keyframes floatBlob {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-20%, -80%) scale(1.08);
+  }
+}
+
+@keyframes morphBlob {
+  0% {
+    border-radius: 45% 55% 65% 35% / 35% 45% 55% 65%;
+  }
+  25% {
+    border-radius: 60% 40% 30% 70% / 50% 60% 40% 50%;
+  }
+  50% {
+    border-radius: 30% 70% 60% 40% / 60% 30% 70% 40%;
+  }
+  75% {
+    border-radius: 70% 30% 40% 60% / 40% 70% 30% 60%;
+  }
+  100% {
+    border-radius: 45% 55% 65% 35% / 35% 45% 55% 65%;
+  }
+}
+
+/* Floating movement for blob 1 */
+@keyframes floatBlobOne {
+  0% {
+    transform: translate(0%, 0%) scale(1);
+  }
+  50% {
+    transform: translate(60%, -80%) scale(1.1);
+  }
+  100% {
+    transform: translate(-40%, 40%) scale(1.05);
+  }
+}
+
+@keyframes floatBlobTwo {
+  0% {
+    transform: translate(0%, 0%) scale(1);
+  }
+  50% {
+    transform: translate(-80%, 60%) scale(1.15);
+  }
+  100% {
+    transform: translate(70%, -50%) scale(1.08);
+  }
+}
+
+@keyframes floatBlobThree {
+  0% {
+    transform: translate(0%, 0%) scale(1);
+  }
+  50% {
+    transform: translate(80%, 60%) scale(1.12);
+  }
+  100% {
+    transform: translate(-60%, -40%) scale(1.06);
+  }
+}
+
+/* Panel with translucent effect */
+.panel-translucent {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .panel-translucent {
+  background: rgba(15, 15, 15, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Panel glow effects */
+.panel-glow {
+  box-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.3),
+    0 0 40px rgba(59, 130, 246, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.dark .panel-glow {
+  box-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.4),
+    0 0 40px rgba(59, 130, 246, 0.3),
+    0 0 60px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+}
+
+.panel-glow-purple {
+  box-shadow: 
+    0 0 20px rgba(147, 51, 234, 0.3),
+    0 0 40px rgba(147, 51, 234, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(147, 51, 234, 0.4);
+}
+
+.dark .panel-glow-purple {
+  box-shadow: 
+    0 0 20px rgba(147, 51, 234, 0.4),
+    0 0 40px rgba(147, 51, 234, 0.3),
+    0 0 60px rgba(147, 51, 234, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(147, 51, 234, 0.5);
+}
+
+.panel-glow-green {
+  box-shadow: 
+    0 0 20px rgba(34, 197, 94, 0.3),
+    0 0 40px rgba(34, 197, 94, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.dark .panel-glow-green {
+  box-shadow: 
+    0 0 20px rgba(34, 197, 94, 0.4),
+    0 0 40px rgba(34, 197, 94, 0.3),
+    0 0 60px rgba(34, 197, 94, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+}
+
+/* Animated glow pulse effect */
+.panel-glow-pulse {
+  animation: glowPulse 3s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.2),
+      0 0 40px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  100% {
+    box-shadow: 
+      0 0 30px rgba(59, 130, 246, 0.4),
+      0 0 60px rgba(59, 130, 246, 0.3),
+      0 0 80px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}
+
+.dark .panel-glow-pulse {
+  animation: glowPulseDark 3s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulseDark {
+  0% {
+    box-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.3),
+      0 0 40px rgba(59, 130, 246, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  100% {
+    box-shadow: 
+      0 0 40px rgba(59, 130, 246, 0.5),
+      0 0 80px rgba(59, 130, 246, 0.4),
+      0 0 120px rgba(59, 130, 246, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Disable the blob animation on mobile devices */
+@media screen and (max-width: 767px) {
+  .gradient-blob {
+    animation: none;
+    filter: blur(60px);
+    opacity: 0.1;
+    width: 150px;
+    height: 150px;
+    transform: translate(-50%, -50%);
+  }
+
+  .multi-blob {
+    animation: none;
+    filter: blur(50px);
+    width: 120px;
+    height: 120px;
+  }
+
+  .stars-bg::before {
+    animation: none;
+  }
+}
+
+/* Responsive width controls and horizontal scrolling */
 @layer base {
   /* Smooth scroll behavior */
   html {
     scroll-behavior: smooth;
+    overflow-x: auto;
+  }
+  
+  body {
+    min-width: 320px; /* Minimum comfortable width for mobile */
   }
   
   /* Better focus styles */
@@ -36,10 +323,25 @@
 }
 
 @layer components {
-  /* Improved panel styles */
+  /* Workspace responsive container */
+  .workspace-container {
+    min-width: 320px;
+    overflow-x: auto;
+  }
+  
+  /* Panel responsive behavior */
   .panel-container {
     @apply bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700;
     @apply overflow-hidden;
+    min-width: 280px; /* Comfortable minimum for typing and viewing */
+  }
+  
+  .panel-container.expanded {
+    min-width: 100%;
+  }
+  
+  .panel-container.single {
+    min-width: 100%;
   }
   
   .panel-header {
@@ -51,6 +353,38 @@
     @apply flex-1 p-4 overflow-auto;
     @apply scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600;
     @apply scrollbar-track-transparent;
+  }
+  
+  /* Responsive breakpoints for panel behavior */
+  @media (max-width: 768px) {
+    .panel-container {
+      min-width: 100%;
+    }
+  }
+  
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .panel-container {
+      min-width: 320px;
+    }
+  }
+  
+  @media (min-width: 1025px) {
+    .panel-container {
+      min-width: 280px;
+    }
+  }
+  
+  /* Minimized panel tabs */
+  .minimized-tab {
+    @apply flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200;
+    @apply dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg transition-colors duration-200;
+    @apply min-w-0 flex-shrink-0 cursor-pointer;
+    min-width: 120px;
+  }
+  
+  .minimized-tab:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
   
   /* Button improvements */
@@ -85,6 +419,39 @@
 }
 
 @layer utilities {
+  /* Horizontal scrolling utilities */
+  .scroll-horizontal {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+  
+  .scroll-horizontal::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  .scroll-horizontal::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scroll-horizontal::-webkit-scrollbar-thumb {
+    background-color: rgb(209 213 219);
+    border-radius: 0.375rem;
+  }
+  
+  .dark .scroll-horizontal::-webkit-scrollbar-thumb {
+    background-color: rgb(75 85 99);
+  }
+  
+  /* Minimum width utilities */
+  .min-w-comfortable {
+    min-width: 280px;
+  }
+  
+  .min-w-mobile {
+    min-width: 320px;
+  }
+  
   /* Scrollbar utilities */
   .scrollbar-thin {
     scrollbar-width: thin;
@@ -124,6 +491,22 @@
   
   .animate-pulse-subtle {
     animation: pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* Panel layout utilities */
+  .panel-layout-single {
+    width: 100%;
+    min-width: 100%;
+  }
+  
+  .panel-layout-dual {
+    width: 50%;
+    min-width: 320px;
+  }
+  
+  .panel-layout-triple {
+    width: 33.333%;
+    min-width: 280px;
   }
 }
 
@@ -170,6 +553,35 @@
   .panel-content {
     @apply p-3;
   }
+  
+  /* Stack panels vertically on mobile */
+  .workspace-container {
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  
+  .workspace-container > * {
+    width: 100% !important;
+    min-width: 100% !important;
+    flex-shrink: 0;
+  }
+}
+
+/* Tablet responsive behavior */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .workspace-container {
+    overflow-x: auto;
+    min-width: 900px; /* Minimum for comfortable 3-panel layout */
+  }
+}
+
+/* Desktop responsive behavior */
+@media (min-width: 1025px) {
+  .workspace-container {
+    overflow-x: auto;
+    min-width: 1000px; /* Comfortable desktop minimum */
+  }
 }
 
 /* High contrast mode support */
@@ -213,5 +625,10 @@
   .btn-primary,
   .btn-secondary {
     @apply bg-transparent border border-gray-400 text-gray-800;
+  }
+  
+  .workspace-container {
+    overflow: visible !important;
+    min-width: auto !important;
   }
 }
