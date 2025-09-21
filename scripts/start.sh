@@ -22,10 +22,11 @@ EOF
 # Frontend environment setup - Frontend will run on the main PORT
 cat > /app/frontend/.env.local << EOF
 # Frontend Configuration from Cloud Run Environment Variables
+# Use relative URLs to leverage Next.js rewrites instead of direct backend calls
 NEXT_PUBLIC_BACKEND_PROTOCOL=${NEXT_PUBLIC_BACKEND_PROTOCOL:-http}
 NEXT_PUBLIC_BACKEND_HOST=${NEXT_PUBLIC_BACKEND_HOST:-localhost}
 NEXT_PUBLIC_BACKEND_PORT=${BACKEND_PORT}
-NEXT_PUBLIC_BACKEND_BASE_URL=${NEXT_PUBLIC_BACKEND_BASE_URL:-http://localhost:${BACKEND_PORT}}
+NEXT_PUBLIC_BACKEND_BASE_URL=""
 
 NEXT_PUBLIC_AUTH_REGISTER_ENDPOINT=${NEXT_PUBLIC_AUTH_REGISTER_ENDPOINT:-/register}
 NEXT_PUBLIC_AUTH_LOGIN_ENDPOINT=${NEXT_PUBLIC_AUTH_LOGIN_ENDPOINT:-/login}

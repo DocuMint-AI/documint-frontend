@@ -73,6 +73,12 @@ class BackendConfig {
   static buildURL(endpoint: string): string {
     // Use baseURL if available, otherwise construct from parts
     const base = this.baseURL || `${this.protocol}://${this.host}:${this.port}`;
+    
+    // If baseURL is empty, use relative URLs (for Next.js proxy)
+    if (!base || base === '' || base === 'undefined') {
+      return endpoint;
+    }
+    
     return `${base}${endpoint}`;
   }
 

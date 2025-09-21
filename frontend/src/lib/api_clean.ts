@@ -51,7 +51,10 @@ export interface QAResponse {
 // API health check function
 async function checkApiHealth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_CONFIG.baseUrl}/health`, {
+    const baseUrl = API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : '';
+    const healthUrl = baseUrl ? `${baseUrl}/health` : '/health';
+    
+    const response = await fetch(healthUrl, {
       method: 'GET',
       signal: AbortSignal.timeout(5000), // 5 second timeout
     });

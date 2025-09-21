@@ -68,8 +68,11 @@ export interface DocumentTextResponse {
 // API health check function
 async function checkApiHealth(): Promise<boolean> {
   try {
-    console.log('Checking health at:', `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.health}`);
-    const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.health}`, {
+    const baseUrl = API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : '';
+    const healthUrl = baseUrl ? `${baseUrl}${API_CONFIG.endpoints.health}` : API_CONFIG.endpoints.health;
+    
+    console.log('Checking health at:', healthUrl);
+    const response = await fetch(healthUrl, {
       method: 'GET',
       signal: AbortSignal.timeout(5000), // 5 second timeout
     });
@@ -246,7 +249,7 @@ export const uploadDocument = async (file: File): Promise<UploadResponse> => {
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.upload}`, {
+      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.upload}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -324,7 +327,7 @@ export const processDocument = async (documentId: string): Promise<ProcessDocume
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.processDocument}`, {
+      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.processDocument}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -432,7 +435,7 @@ export const askQuestion = async (documentId: string, question: string): Promise
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.qa}`, {
+      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.qa}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -509,7 +512,7 @@ export const getDocumentText = async (documentId: string): Promise<DocumentTextR
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.documentText}/${documentId}`, {
+      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.documentText}/${documentId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,

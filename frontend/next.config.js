@@ -8,39 +8,49 @@ const nextConfig = {
   },
   // Proxy API requests to backend
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
+    
+    // If no backend URL is set, assume backend is on localhost:8000 (for local dev)
+    // If backend URL is empty, we're running in container and backend is internal
+    const shouldProxy = !backendUrl || backendUrl === '';
+    
+    if (!shouldProxy) {
+      return [];
+    }
+    
+    const targetUrl = backendUrl || 'http://localhost:8000';
     
     return [
       // API routes
       {
         source: '/api/:path*',
-        destination: `${backendUrl}/api/:path*`,
+        destination: `${targetUrl}/api/:path*`,
       },
       // Auth routes
       {
         source: '/register',
-        destination: `${backendUrl}/register`,
+        destination: `${targetUrl}/register`,
       },
       {
         source: '/login',
-        destination: `${backendUrl}/login`,
+        destination: `${targetUrl}/login`,
       },
       {
         source: '/logout',
-        destination: `${backendUrl}/logout`,
+        destination: `${targetUrl}/logout`,
       },
       {
         source: '/me',
-        destination: `${backendUrl}/me`,
+        destination: `${targetUrl}/me`,
       },
       {
         source: '/update-password',
-        destination: `${backendUrl}/update-password`,
+        destination: `${targetUrl}/update-password`,
       },
       // Health check
       {
         source: '/health',
-        destination: `${backendUrl}/health`,
+        destination: `${targetUrl}/health`,
       },
     ];
   },
