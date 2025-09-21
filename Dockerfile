@@ -16,10 +16,14 @@ RUN npm ci
 COPY frontend/src/ ./src
 COPY frontend/public/ ./public
 COPY frontend/next.config.js ./
-COPY frontend/tsconfig.json ./                # required for path aliases
-COPY frontend/postcss.config.js ./            # Tailwind/PostCSS config
-COPY frontend/tailwind.config.ts ./           # Tailwind config
-COPY frontend/next-env.d.ts ./                # Next.js TypeScript declarations
+# TypeScript config required for path aliases
+COPY frontend/tsconfig.json ./
+# Tailwind/PostCSS config
+COPY frontend/postcss.config.js ./
+# Tailwind config
+COPY frontend/tailwind.config.ts ./
+# Next.js TypeScript declarations
+COPY frontend/next-env.d.ts ./
 
 # Build frontend
 RUN npm run build
