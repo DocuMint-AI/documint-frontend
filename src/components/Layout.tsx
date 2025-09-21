@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import ThemeToggle from './ThemeToggle';
+import ProfileDropdown from './ProfileDropdown';
+import ApiInitializer from './ApiInitializer';
+import { SessionManager } from '@/lib/auth';
 import { FileText, Upload, Settings, Brain, Menu, X } from 'lucide-react';
 
 interface LayoutProps {
@@ -13,6 +16,44 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      setIsInitializing(true);
+      try {
+        // Initialize and validate session
+        const isValid = await SessionManager.initializeSession();
+        setIsAuthenticated(isValid);
+        
+        if (!isValid && SessionManager.getSession()) {
+          // Had a session but validation failed - redirect to auth
+          console.log('Session invalid, redirecting to login');
+          window.location.href = '/auth';
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
+  // Show loading while initializing
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Initializing...</p>
+        </div>
+      </div>
+    );
+  }
 
   const navigation = [
     { name: 'Upload', href: '/upload', icon: Upload },
@@ -24,6 +65,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-black transition-colors">
+      {/* Silent API initialization */}
+      <ApiInitializer />
+      
       {/* Header */}
       <header className="bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -45,7 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-              {navigation.map((item) => {
+              {isAuthenticated && navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 
@@ -65,8 +109,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 );
               })}
               
-              <div className="ml-2 pl-2 border-l border-gray-200 dark:border-gray-800">
+              <div className="ml-2 pl-2 border-l border-gray-200 dark:border-gray-800 flex items-center gap-2">
                 <ThemeToggle />
+                {isAuthenticated && <ProfileDropdown />}
               </div>
             </nav>
 
@@ -91,7 +136,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {isMobileMenuOpen && (
             <div className="md:hidden border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 animate-slide-up">
               <nav className="px-2 py-3 space-y-1">
-                {navigation.map((item) => {
+                {isAuthenticated && navigation.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
                   
@@ -111,6 +156,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     </Link>
                   );
                 })}
+                
+                {isAuthenticated && (
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
+                    <ProfileDropdown className="w-full" />
+                  </div>
+                )}
               </nav>
             </div>
           )}

@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import PageLoader from '@/components/PageLoader';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import AuthGuard from '@/components/AuthGuard';
 import DocumentPanel from '@/components/panels/DocumentPanel';
 import InsightsPanel from '@/components/panels/InsightsPanel';
 import QAPanel from '@/components/panels/QAPanel';
@@ -325,7 +326,8 @@ export default function WorkspacePage() {
   }
 
   return (
-    <Layout>
+    <AuthGuard>
+      <Layout>
       <div className="h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-gray-50 dark:bg-black font-sans flex flex-col overflow-hidden stars-bg">
         {/* Header */}
         <div className="flex-shrink-0 p-2 md:p-4 bg-gray-100/20 dark:bg-gray-800/20 border-b border-gray-200/30 dark:border-gray-700/30 shadow-sm">
@@ -592,5 +594,6 @@ export default function WorkspacePage() {
         </div>
       </div>
     </Layout>
+    </AuthGuard>
   );
 }

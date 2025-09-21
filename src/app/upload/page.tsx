@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import PageLoader from '@/components/PageLoader';
 import DocumentUpload from '@/components/DocumentUpload';
+import AuthGuard from '@/components/AuthGuard';
 import { Search, MessageSquare, BarChart3 } from 'lucide-react';
 
 export default function UploadPage() {
@@ -21,8 +22,10 @@ export default function UploadPage() {
   if (isLoading) {
     return <PageLoader text="Loading upload page..." />;
   }
+  
   return (
-    <Layout>
+    <AuthGuard>
+      <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-black py-6 sm:py-8 lg:py-12 stars-bg">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
@@ -80,5 +83,6 @@ export default function UploadPage() {
         </div>
       </div>
     </Layout>
+    </AuthGuard>
   );
 }

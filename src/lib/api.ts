@@ -1,14 +1,25 @@
 // API configuration and utilities for DocuMint AI
 import { extractDocumentText, generateMockAnalysis, ExtractedDocument } from './documentExtractor';
+import { normalizeAnalysis, normalizeInsight, isValidAnalysisResponse, type NormalizedAnalysis } from './insightNormalizer';
 
 // Environment configuration
 const API_CONFIG = {
   baseUrl: process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000',
   endpoints: {
-    upload: process.env.NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT || '/upload',
+    // Authentication endpoints
+    register: process.env.NEXT_PUBLIC_AUTH_REGISTER_ENDPOINT || '/register',
+    login: process.env.NEXT_PUBLIC_AUTH_LOGIN_ENDPOINT || '/login',
+    logout: process.env.NEXT_PUBLIC_AUTH_LOGOUT_ENDPOINT || '/logout',
+    me: process.env.NEXT_PUBLIC_AUTH_ME_ENDPOINT || '/me',
+    
+    // Document endpoints
+    upload: process.env.NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT || '/api/v1/upload',
     processDocument: process.env.NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT || '/api/v1/process-document',
     qa: process.env.NEXT_PUBLIC_BACKEND_QA_ENDPOINT || '/api/v1/qa',
-    ocr: process.env.NEXT_PUBLIC_BACKEND_OCR_ENDPOINT || '/api/v1/ocr',
+    documents: process.env.NEXT_PUBLIC_BACKEND_DOCUMENTS_ENDPOINT || '/api/v1/documents',
+    
+    // Health check
+    health: process.env.NEXT_PUBLIC_BACKEND_HEALTH_ENDPOINT || '/health',
   },
   maxFileSize: parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '10485760'), // 10MB default
   supportedFormats: process.env.NEXT_PUBLIC_SUPPORTED_FORMATS?.split(',') || ['.pdf', '.doc', '.docx'],
@@ -26,17 +37,12 @@ export interface UploadResponse {
 export interface ProcessDocumentResponse {
   success: boolean;
   documentId: string;
-  analysis: {
-    insights: Array<{
-      type: string;
-      level: string;
-      text: string;
-      color: string;
-    }>;
-    summary: string;
-    riskScore: number;
-    complianceScore: number;
-    extractedText?: string;
+  analysis: NormalizedAnalysis;
+  documentAnalysis?: {
+    document_type?: any;
+    total_insights?: number;
+    generic_insights_count?: number;
+    specific_insights_count?: number;
   };
   error?: string;
 }
@@ -49,23 +55,15 @@ export interface QAResponse {
   error?: string;
 }
 
-export interface OCRResponse {
-  success: boolean;
-  documentId: string;
-  extractedText: string;
-  confidence: number;
-  pages?: number;
-  wordCount?: number;
-  error?: string;
-}
-
 // API health check function
 async function checkApiHealth(): Promise<boolean> {
   try {
-    const response = await fetch(`${API_CONFIG.baseUrl}/health`, {
+    console.log('Checking health at:', `${API_CONFIG.baseUrl}${API_CONFIG.endpoints.health}`);
+    const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.health}`, {
       method: 'GET',
       signal: AbortSignal.timeout(5000), // 5 second timeout
     });
+    console.log('Health check response status:', response.status, response.ok);
     return response.ok;
   } catch (error) {
     console.log('API health check failed, falling back to mock mode:', error);
@@ -73,27 +71,40 @@ async function checkApiHealth(): Promise<boolean> {
   }
 }
 
-// Automatically determine API mode based on backend availability
+// Automatically determine API mode based on environment and backend availability
 export const getApiMode = async (): Promise<'mock' | 'real'> => {
-  if (typeof window === 'undefined') return 'mock';
+  if (typeof window === 'undefined') return 'real'; // Default to real on server
   
-  // Check localStorage for manual override
-  const manualMode = localStorage.getItem('apiMode') as 'mock' | 'real' | null;
-  if (manualMode) return manualMode; // Respect any manual mode setting
+  // Check for forced mock mode from environment
+  const forceMockMode = process.env.NEXT_PUBLIC_FORCE_MOCK_MODE === 'true';
+  if (forceMockMode) {
+    console.log('Mock mode forced by environment variable');
+    return 'mock';
+  }
   
-  // Check if API is available when no manual setting exists
-  const isApiHealthy = await checkApiHealth();
-  const mode = isApiHealthy ? 'real' : 'mock';
+  // Always prefer real backend - no more localStorage overrides or detection
+  // Remove any stored API mode preferences to force real backend
+  localStorage.removeItem('apiMode');
+  localStorage.removeItem('detectedApiMode');
   
-  // Cache the result for this session
-  localStorage.setItem('detectedApiMode', mode);
-  
-  return mode;
+  console.log('Using real backend mode (hardlocked)');
+  return 'real';
 };
 
+// Set API mode preference (disabled for hardlocked real backend)
 export const setApiMode = (mode: 'mock' | 'real') => {
   if (typeof window !== 'undefined') {
-    localStorage.setItem('apiMode', mode);
+    // Only allow mock mode if forced by environment
+    const forceMockMode = process.env.NEXT_PUBLIC_FORCE_MOCK_MODE === 'true';
+    if (mode === 'mock' && !forceMockMode) {
+      console.warn('Mock mode not allowed - forcing real backend mode');
+      return;
+    }
+    if (!forceMockMode) {
+      console.log('API mode setting disabled - hardlocked to real backend');
+      return;
+    }
+    console.log('API mode set to:', mode);
   }
 };
 
@@ -217,16 +228,38 @@ export const uploadDocument = async (file: File): Promise<UploadResponse> => {
     formData.append('file', file);
     
     try {
+      // Get auth token from session
+      const { SessionManager } = await import('@/lib/auth');
+      const session = SessionManager.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No authentication token found');
+      }
+      
       const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.upload}`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
         body: formData,
       });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      return await response.json();
+      const result = await response.json();
+      
+      // Backend returns DocumentUploadResponse with doc_id
+      return {
+        success: true,
+        documentId: result.doc_id,
+        filename: result.filename,
+        message: 'Document uploaded successfully'
+      };
     } catch (error) {
       console.log('Real API upload failed, falling back to mock mode:', error);
       // Fallback to mock mode if real API fails
@@ -249,45 +282,79 @@ export const processDocument = async (documentId: string): Promise<ProcessDocume
     
     if (storedDoc) {
       const extractedDoc = JSON.parse(storedDoc) as ExtractedDocument;
-      const analysis = generateMockAnalysis(extractedDoc);
+      const mockAnalysis = generateMockAnalysis(extractedDoc);
+      
+      // Normalize the mock analysis to ensure consistent format
+      const normalizedAnalysis = normalizeAnalysis(mockAnalysis);
       
       return {
         success: true,
         documentId,
-        analysis
+        analysis: normalizedAnalysis
       };
     } else {
       // Fallback to generic mock analysis
       const mockData = await loadMockInsights();
+      const normalizedAnalysis = normalizeAnalysis(mockData);
+      
       return {
         success: true,
         documentId,
-        analysis: {
-          insights: mockData.insights,
-          summary: mockData.summary,
-          riskScore: mockData.riskScore,
-          complianceScore: mockData.complianceScore
-        }
+        analysis: normalizedAnalysis
       };
     }
   } else {
     // Real API call
     try {
+      // Get auth token from session
+      const { SessionManager } = await import('@/lib/auth');
+      const session = SessionManager.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No authentication token found');
+      }
+      
       const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.processDocument}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ documentId }),
+        body: JSON.stringify({ doc_id: documentId }),
       });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      return await response.json();
+      const result = await response.json();
+      console.log('Process document response:', result);
+      
+      // Backend returns success_response format with data field
+      if (result.success && result.data) {
+        // Validate and normalize the AI response
+        if (!isValidAnalysisResponse(result.data)) {
+          console.warn('Invalid analysis response format, using fallback');
+          throw new Error('Invalid response format from AI service');
+        }
+        
+        const normalizedAnalysis = normalizeAnalysis(result.data);
+        
+        return {
+          success: true,
+          documentId,
+          analysis: normalizedAnalysis,
+          documentAnalysis: result.data.document_analysis || {}
+        };
+      } else {
+        console.error('Backend process document error:', result);
+        throw new Error(result.message || 'Unknown error from backend');
+      }
     } catch (error) {
-      console.log('Real API processing failed, falling back to mock mode:', error);
+      console.log('Real API processing failed, error details:', error);
       // Fallback to mock mode if real API fails
       localStorage.setItem('apiMode', 'mock');
       return processDocument(documentId);
@@ -347,21 +414,47 @@ export const askQuestion = async (documentId: string, question: string): Promise
   } else {
     // Real API call
     try {
+      // Get auth token from session
+      const { SessionManager } = await import('@/lib/auth');
+      const session = SessionManager.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No authentication token found');
+      }
+      
       const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.qa}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ documentId, question }),
+        body: JSON.stringify({ doc_id: documentId, query: question }),
       });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed');
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      return await response.json();
+      const result = await response.json();
+      console.log('QA response:', result);
+      
+      // Backend returns success_response format with data field
+      if (result.success && result.data) {
+        return {
+          success: true,
+          answer: result.data.answer || result.data,
+          confidence: result.data.confidence || 0.8,
+          sources: result.data.sources || []
+        };
+      } else {
+        console.error('Backend QA error:', result);
+        throw new Error(result.message || 'Unknown error from backend');
+      }
     } catch (error) {
-      console.log('Real API Q&A failed, falling back to mock mode:', error);
+      console.log('Real API Q&A failed, error details:', error);
       // Fallback to mock mode if real API fails
       localStorage.setItem('apiMode', 'mock');
       return askQuestion(documentId, question);
@@ -369,72 +462,3 @@ export const askQuestion = async (documentId: string, question: string): Promise
   }
 };
 
-// OCR API for extracting text from documents
-export const extractTextFromDocument = async (documentId: string, file?: File): Promise<OCRResponse> => {
-  const apiMode = await getApiMode();
-  
-  if (apiMode === 'mock') {
-    await mockDelay(2000);
-    
-    // In mock mode, try to get extracted text from localStorage first
-    const storedDoc = typeof window !== 'undefined' ? 
-      localStorage.getItem(`document_${documentId}`) : null;
-    
-    if (storedDoc) {
-      const extractedDoc = JSON.parse(storedDoc) as ExtractedDocument;
-      return {
-        success: true,
-        documentId,
-        extractedText: extractedDoc.text,
-        confidence: 0.95,
-        pages: extractedDoc.pageCount,
-        wordCount: extractedDoc.wordCount
-      };
-    }
-    
-    // Fallback to mock extracted text if no stored document
-    const mockText = `This Non-Disclosure Agreement ("Agreement") is entered into on January 15, 2024, between TechCorp Solutions Inc., a Delaware corporation ("Company"), and John Smith, an individual ("Recipient").
-
-1. Definition of Confidential Information
-
-For purposes of this Agreement, "Confidential Information" shall include all non-public, proprietary or confidential information, technical data, trade secrets, know-how, research, product plans, products, services, customers, customer lists, markets, software, developments, inventions, processes, formulas, technology, designs, drawings, engineering, hardware configuration information, marketing, finances, or other business information disclosed by Company.
-
-2. Obligations of Receiving Party
-
-Recipient agrees to hold and maintain the Confidential Information in strict confidence for a period of five (5) years from the date of disclosure.`;
-    
-    return {
-      success: true,
-      documentId,
-      extractedText: mockText,
-      confidence: 0.92,
-      pages: 3,
-      wordCount: mockText.split(/\s+/).length
-    };
-  } else {
-    // Real API call
-    try {
-      const formData = new FormData();
-      formData.append('documentId', documentId);
-      if (file) {
-        formData.append('file', file);
-      }
-      
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.ocr}`, {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.log('Real API OCR failed, falling back to mock mode:', error);
-      // Fallback to mock mode if real API fails
-      localStorage.setItem('apiMode', 'mock');
-      return extractTextFromDocument(documentId, file);
-    }
-  }
-};

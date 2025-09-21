@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Maximize2, Minimize2, FileText, Minus } from 'lucide-react';
-import { extractTextFromDocument, getApiMode } from '@/lib/api';
+import { getApiMode } from '@/lib/api';
 
 interface DocumentPanelProps {
   expanded: boolean;
@@ -39,29 +39,8 @@ const DocumentPanel: React.FC<DocumentPanelProps> = ({ expanded, onExpand, onMin
         const currentApiMode = await getApiMode();
         setApiModeState(currentApiMode);
 
-        if (currentApiMode === 'real') {
-          // In real mode, call OCR endpoint to get extracted text
-          try {
-            const ocrResponse = await extractTextFromDocument(doc.id);
-            if (ocrResponse.success) {
-              setDocumentData({
-                text: ocrResponse.extractedText,
-                filename: doc.filename,
-                wordCount: ocrResponse.wordCount,
-                pageCount: ocrResponse.pages
-              });
-            } else {
-              // Fall back to stored data if OCR fails
-              handleFallbackData(doc);
-            }
-          } catch (error) {
-            console.error('OCR extraction failed:', error);
-            handleFallbackData(doc);
-          }
-        } else {
-          // In mock mode, use existing logic
-          handleFallbackData(doc);
-        }
+        // Use stored document data (OCR is processed during upload in real mode)
+        handleFallbackData(doc);
       }
       
       setIsLoading(false);
@@ -169,13 +148,6 @@ Recipient agrees to hold and maintain the Confidential Information in strict con
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               {documentData?.filename || 'Contract Agreement - NDA-2024-001'}
             </p>
-            {apiMode === 'real' && (
-              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                <span className="px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                  Real API • OCR Processed
-                </span>
-              </div>
-            )}
           </div>
           
           <div className="space-y-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">

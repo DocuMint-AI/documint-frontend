@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Maximize2, Minimize2, Brain, Minus } from 'lucide-react';
-import { getApiMode } from '@/lib/api';
+import { Brain, Maximize2, Minimize2, Minus } from 'lucide-react';
+import { getApiMode, processDocument } from '@/lib/api';
+import { type NormalizedInsight } from '@/lib/insightNormalizer';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
 interface InsightsPanelProps {
@@ -16,7 +17,7 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({ expanded, onExpand, onMin
   const [isLoading, setIsLoading] = useState(true);
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [apiMode, setCurrentApiMode] = useState<'mock' | 'real'>('mock');
-  const [insights, setInsights] = useState<any[]>([]);
+  const [insights, setInsights] = useState<NormalizedInsight[]>([]);
 
   useEffect(() => {
     const loadInsights = async () => {
@@ -27,27 +28,74 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({ expanded, onExpand, onMin
       setCurrentApiMode(mode);
       
       if (mode === 'real') {
-        // Check if document is being processed
-        const processingDoc = localStorage.getItem('processingDocument');
-        if (processingDoc) {
-          setIsDataLoading(true);
-        } else {
-          // Load existing insights from localStorage (if any)
-          const currentDoc = localStorage.getItem('currentDocument');
-          if (currentDoc) {
-            const doc = JSON.parse(currentDoc);
-            if (doc.analysis?.insights) {
-              setInsights(doc.analysis.insights);
-            } else {
-              // No insights yet, show loading state for real mode
-              setIsDataLoading(true);
-              // Simulate fetching from server
-              setTimeout(() => {
-                setInsights(getDefaultInsights());
-                setIsDataLoading(false);
-              }, 2000);
+        // Get current document
+        const currentDoc = localStorage.getItem('currentDocument');
+        if (currentDoc) {
+          const doc = JSON.parse(currentDoc);
+          
+          // Check if this document was uploaded in real mode (UUID format vs mock format)
+          if (!doc.id || doc.id.startsWith('doc_')) {
+            console.log('Document was uploaded in mock mode, showing message to re-upload');
+            setInsights([{
+              type: 'Info',
+              level: 'Medium', 
+              text: 'This document was uploaded in demo mode. Please upload a new document to use real AI analysis.',
+              color: 'blue'
+            }]);
+            setIsLoading(false);
+            return;
+          }
+          
+          // Check if we already have insights cached
+          if (doc.analysis?.insights) {
+            setInsights(doc.analysis.insights);
+          } else {
+            // Call the real backend API
+            setIsDataLoading(true);
+            try {
+              console.log('Calling real backend for insights with documentId:', doc.id);
+              const response = await processDocument(doc.id);
+              
+              if (response.success && response.analysis?.insights) {
+                setInsights(response.analysis.insights);
+                
+                // Cache the insights in the document
+                const updatedDoc = {
+                  ...doc,
+                  analysis: {
+                    ...doc.analysis,
+                    ...response.analysis
+                  }
+                };
+                localStorage.setItem('currentDocument', JSON.stringify(updatedDoc));
+              } else {
+                console.error('Backend returned no insights:', response);
+                setInsights([{
+                  type: 'Info',
+                  level: 'High',
+                  text: 'Failed to analyze document with real backend. Please try uploading again.',
+                  color: 'red'
+                }]);
+              }
+            } catch (error) {
+              console.error('Failed to load insights from backend:', error);
+              setInsights([{
+                type: 'Info', 
+                level: 'High',
+                text: 'Backend analysis failed. Please check your connection and try again.',
+                color: 'red'
+              }]);
+            } finally {
+              setIsDataLoading(false);
             }
           }
+        } else {
+          setInsights([{
+            type: 'Info',
+            level: 'Medium',
+            text: 'No document uploaded. Please upload a document to begin analysis.',
+            color: 'blue'
+          }]);
         }
       } else {
         // Mock mode - use default insights
@@ -60,15 +108,67 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({ expanded, onExpand, onMin
     loadInsights();
   }, []);
 
-  const getDefaultInsights = () => {
-    const baseInsights = [
+  // Listen for API mode changes
+  useEffect(() => {
+    const handleApiModeChange = async (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const newMode = customEvent.detail.mode;
+      console.log('InsightsPanel: API mode changed to', newMode);
+      setCurrentApiMode(newMode);
+      
+      // Reload insights with new mode
+      if (newMode === 'real') {
+        const currentDoc = localStorage.getItem('currentDocument');
+        if (currentDoc) {
+          const doc = JSON.parse(currentDoc);
+          
+          // Check if this document was uploaded in real mode
+          if (!doc.id || doc.id.startsWith('doc_')) {
+            console.log('Document was uploaded in mock mode, cannot process with real API');
+            setInsights([{
+              type: 'Info',
+              level: 'Medium',
+              text: 'Please upload a new document to use real backend analysis',
+              color: 'blue'
+            }]);
+            return;
+          }
+          
+          setIsDataLoading(true);
+          try {
+            const response = await processDocument(doc.id);
+            if (response.success && response.analysis?.insights) {
+              setInsights(response.analysis.insights);
+            }
+          } catch (error) {
+            console.error('Error reloading insights with real API:', error);
+            setInsights(getDefaultInsights());
+          } finally {
+            setIsDataLoading(false);
+          }
+        }
+      } else {
+        // Switch to mock data
+        setInsights(getDefaultInsights());
+      }
+    };
+
+    window.addEventListener('apiModeChanged', handleApiModeChange);
+    
+    return () => {
+      window.removeEventListener('apiModeChanged', handleApiModeChange);
+    };
+  }, []);
+
+  const getDefaultInsights = (): NormalizedInsight[] => {
+    const baseInsights: NormalizedInsight[] = [
       { type: 'Risk', level: 'High', text: 'Overly broad confidentiality scope may be unenforceable', color: 'red' },
       { type: 'Compliance', level: 'Medium', text: 'Missing jurisdiction clause for dispute resolution', color: 'yellow' },
       { type: 'Standard', level: 'Low', text: 'Term length aligns with industry standards', color: 'green' },
       { type: 'Suggestion', level: 'Medium', text: 'Consider adding mutual confidentiality provisions', color: 'yellow' }
     ];
 
-    const expandedInsights = [
+    const expandedInsights: NormalizedInsight[] = [
       ...baseInsights,
       { type: 'Legal', level: 'Medium', text: 'Definition of confidential information could be more specific', color: 'yellow' },
       { type: 'Risk', level: 'High', text: 'No carve-outs for publicly available information', color: 'red' },
@@ -117,9 +217,22 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({ expanded, onExpand, onMin
         border: 'border-green-200 dark:border-green-800',
         chip: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200',
         levelChip: level === 'Low' ? 'bg-green-500 text-white' : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'
+      },
+      blue: {
+        bg: 'bg-blue-50 dark:bg-blue-900/20',
+        border: 'border-blue-200 dark:border-blue-800',
+        chip: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200',
+        levelChip: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200'
       }
     };
-    return colorMap[color as keyof typeof colorMap];
+    
+    // Return the color mapping or fallback to gray
+    return colorMap[color as keyof typeof colorMap] || {
+      bg: 'bg-gray-50 dark:bg-gray-900/20',
+      border: 'border-gray-200 dark:border-gray-800',
+      chip: 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200',
+      levelChip: 'bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200'
+    };
   };
   
   return (
@@ -164,7 +277,7 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({ expanded, onExpand, onMin
         ) : (
           <div className="space-y-3">
             {(expanded ? insights : insights.slice(0, 4)).map((insight, index) => {
-              const colors = getColorClasses(insight.color, insight.level);
+              const colors = getColorClasses(insight.color || 'gray', insight.level || 'Medium');
               return (
                 <div
                   key={index}
@@ -172,14 +285,14 @@ const InsightsPanel: React.FC<InsightsPanelProps> = ({ expanded, onExpand, onMin
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors.chip}`}>
-                      {insight.type}
+                      {insight.type || 'Info'}
                     </span>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors.levelChip}`}>
-                      {insight.level}
+                      {insight.level || 'Medium'}
                     </span>
                   </div>
                   <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {insight.text}
+                    {insight.text || 'No description available'}
                   </p>
                 </div>
               );

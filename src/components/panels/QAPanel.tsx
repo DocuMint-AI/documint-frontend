@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Maximize2, Minimize2, MessageCircle, Send, Mic, Minus } from 'lucide-react';
 import { askQuestion } from '@/lib/api';
+import TypingAnimation from '@/components/TypingAnimation';
 
 interface QAPanelProps {
   expanded: boolean;
@@ -15,7 +16,8 @@ interface Message {
   type: 'question' | 'answer';
   text: string;
   timestamp: string;
-  confidence?: number;
+  isTyping?: boolean;
+  id?: string;
 }
 
 const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize, canMinimize = true }) => {
@@ -24,6 +26,7 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize, canMi
   const [isLoading, setIsLoading] = useState(false);
   const [currentDocumentId, setCurrentDocumentId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
   
   // Load persisted messages for the current document
   useEffect(() => {
@@ -43,13 +46,14 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize, canMi
             {
               type: 'question' as const,
               text: 'What is the duration of the confidentiality obligation?',
-              timestamp: '10:30 AM'
+              timestamp: '10:30 AM',
+              id: 'default-q1'
             },
             {
               type: 'answer' as const,
               text: 'According to Section 2 of the agreement, the confidentiality obligation lasts for five (5) years from the date of disclosure.',
               timestamp: '10:30 AM',
-              confidence: 0.9
+              id: 'default-a1'
             }
           ];
           setMessages(defaultMessages);
@@ -70,10 +74,12 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize, canMi
 
   const handleSendQuestion = async () => {
     if (question.trim() && currentDocumentId) {
+      const questionId = `q-${Date.now()}`;
       const newQuestion: Message = {
         type: 'question',
         text: question,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        id: questionId
       };
       
       setMessages(prev => [...prev, newQuestion]);
@@ -81,29 +87,48 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize, canMi
       setIsLoading(true);
       
       try {
+        console.log('Sending question to backend:', { documentId: currentDocumentId, question: newQuestion.text });
         const response = await askQuestion(currentDocumentId, newQuestion.text);
         
-        const answerMessage: Message = {
-          type: 'answer',
-          text: response.answer,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          confidence: response.confidence
-        };
-        
-        setMessages(prev => [...prev, answerMessage]);
+        if (response.success) {
+          const answerId = `a-${Date.now()}`;
+          const answerMessage: Message = {
+            type: 'answer',
+            text: response.answer,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isTyping: true,
+            id: answerId
+          };
+          
+          setMessages(prev => [...prev, answerMessage]);
+          setTypingMessageId(answerId);
+        } else {
+          throw new Error(response.error || 'Failed to get answer');
+        }
       } catch (error) {
+        console.error('Q&A API error:', error);
+        const errorId = `error-${Date.now()}`;
         const errorMessage: Message = {
           type: 'answer',
           text: 'Sorry, I encountered an error while processing your question. Please try again.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          confidence: 0
+          isTyping: true,
+          id: errorId
         };
         
         setMessages(prev => [...prev, errorMessage]);
+        setTypingMessageId(errorId);
       } finally {
         setIsLoading(false);
       }
     }
+  };
+
+  const handleTypingComplete = (messageId: string) => {
+    setTypingMessageId(null);
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, isTyping: false } : msg
+    ));
   };
 
   const handleVoiceInput = () => {
@@ -111,13 +136,7 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize, canMi
     // Voice recording logic would go here
   };
 
-  const getConfidenceColor = (confidence?: number) => {
-    if (!confidence) return 'text-gray-400';
-    if (confidence >= 0.8) return 'text-green-600 dark:text-green-400';
-    if (confidence >= 0.6) return 'text-yellow-600 dark:text-yellow-400';
-    return 'text-red-600 dark:text-red-400';
-  };
-  
+
   return (
     <div className="h-full flex flex-col bg-white/15 dark:bg-gray-900/15 rounded-lg shadow-lg border-2 border-white/30 dark:border-gray-600/40">
       {/* Header */}
@@ -163,14 +182,18 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize, canMi
                   {message.type === 'question' ? 'You' : 'AI Assistant'}
                 </span>
                 <span className="text-xs text-gray-400">{message.timestamp}</span>
-                {message.type === 'answer' && message.confidence !== undefined && (
-                  <span className={`text-xs font-medium ${getConfidenceColor(message.confidence)}`}>
-                    {Math.round(message.confidence * 100)}% confidence
-                  </span>
-                )}
               </div>
               <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                {message.text}
+                {message.type === 'answer' && message.isTyping ? (
+                  <TypingAnimation 
+                    text={message.text}
+                    speed={25}
+                    onComplete={() => message.id && handleTypingComplete(message.id)}
+                    className=""
+                  />
+                ) : (
+                  message.text
+                )}
               </p>
             </div>
           ))}
