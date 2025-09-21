@@ -17,6 +17,7 @@ const API_CONFIG = {
     processDocument: process.env.NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT || '/api/v1/process-document',
     qa: process.env.NEXT_PUBLIC_BACKEND_QA_ENDPOINT || '/api/v1/qa',
     documents: process.env.NEXT_PUBLIC_BACKEND_DOCUMENTS_ENDPOINT || '/api/v1/documents',
+    documentText: process.env.NEXT_PUBLIC_BACKEND_TEXT_ENDPOINT || '/api/v1/text',
     
     // Health check
     health: process.env.NEXT_PUBLIC_BACKEND_HEALTH_ENDPOINT || '/health',
@@ -52,6 +53,15 @@ export interface QAResponse {
   answer: string;
   confidence: number;
   sources?: string[];
+  error?: string;
+}
+
+export interface DocumentTextResponse {
+  success: boolean;
+  text: string;
+  word_count: number;
+  page_count?: number;
+  filename?: string;
   error?: string;
 }
 
@@ -458,6 +468,85 @@ export const askQuestion = async (documentId: string, question: string): Promise
       // Fallback to mock mode if real API fails
       localStorage.setItem('apiMode', 'mock');
       return askQuestion(documentId, question);
+    }
+  }
+};
+
+// Get document text API
+export const getDocumentText = async (documentId: string): Promise<DocumentTextResponse> => {
+  const apiMode = await getApiMode();
+  
+  if (apiMode === 'mock') {
+    // In mock mode, try to get extracted document from localStorage
+    const storedDoc = typeof window !== 'undefined' ? 
+      localStorage.getItem(`document_${documentId}`) : null;
+    
+    if (storedDoc) {
+      const extractedDoc = JSON.parse(storedDoc) as ExtractedDocument;
+      return {
+        success: true,
+        text: extractedDoc.text,
+        word_count: extractedDoc.wordCount,
+        page_count: extractedDoc.pageCount,
+        filename: extractedDoc.filename
+      };
+    } else {
+      return {
+        success: false,
+        text: '',
+        word_count: 0,
+        error: 'Document text not found in mock storage'
+      };
+    }
+  } else {
+    // Real API call
+    try {
+      // Get auth token from session
+      const { SessionManager } = await import('@/lib/auth');
+      const session = SessionManager.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.documentText}/${documentId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('Document text response:', result);
+      
+      // Backend returns success_response format with data field
+      if (result.success && result.data) {
+        return {
+          success: true,
+          text: result.data.text,
+          word_count: result.data.word_count,
+          page_count: result.data.page_count,
+          filename: result.data.filename
+        };
+      } else {
+        console.error('Backend document text error:', result);
+        throw new Error(result.message || 'Unknown error from backend');
+      }
+    } catch (error) {
+      console.log('Real API document text failed, error details:', error);
+      return {
+        success: false,
+        text: '',
+        word_count: 0,
+        error: error instanceof Error ? error.message : 'Failed to fetch document text'
+      };
     }
   }
 };

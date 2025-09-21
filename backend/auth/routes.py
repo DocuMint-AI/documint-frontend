@@ -2,11 +2,15 @@
 Authentication routes for user registration, login, and logout
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import Optional
 from datetime import timedelta
+
+# Rate limiting
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from auth.utils import (
     create_user, authenticate_user, create_session, 
@@ -14,6 +18,9 @@ from auth.utils import (
     update_user_password
 )
 from config import config
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 
 class UserCreate(BaseModel):
@@ -80,7 +87,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
 
 @auth_router.post("/register", response_model=UserResponse)
-async def register(user_data: UserCreate):
+@limiter.limit("5/minute")  # Limit registration attempts
+async def register(request: Request, user_data: UserCreate):
     """Register a new user"""
     try:
         user = create_user(user_data.username, user_data.password)
@@ -104,7 +112,8 @@ async def register(user_data: UserCreate):
 
 
 @auth_router.post("/login", response_model=Token)
-async def login(user_data: UserLogin):
+@limiter.limit("10/minute")  # Limit login attempts to prevent brute force
+async def login(request: Request, user_data: UserLogin):
     """Login user and return access token"""
     user = authenticate_user(user_data.username, user_data.password)
     
@@ -134,7 +143,8 @@ async def login(user_data: UserLogin):
 
 
 @auth_router.post("/logout")
-async def logout(current_user: dict = Depends(get_current_user)):
+@limiter.limit("20/minute")  # Allow reasonable logout frequency
+async def logout(request: Request, current_user: dict = Depends(get_current_user)):
     """Logout user (invalidate session)"""
     # In a more complex system, you might want to blacklist the JWT token
     # For now, we'll just return a success message
@@ -142,7 +152,8 @@ async def logout(current_user: dict = Depends(get_current_user)):
 
 
 @auth_router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+@limiter.limit("30/minute")  # Allow frequent profile checks
+async def get_current_user_info(request: Request, current_user: dict = Depends(get_current_user)):
     """Get current user information"""
     # Extract session_uid from the latest session (could be improved)
     latest_session = max(current_user["sessions"].keys()) if current_user["sessions"] else None
@@ -155,7 +166,9 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
 
 
 @auth_router.post("/update-password")
+@limiter.limit("3/minute")  # Strict limit for password updates
 async def update_password(
+    request: Request,
     password_data: UpdatePassword,
     current_user: dict = Depends(get_current_user)
 ):

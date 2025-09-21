@@ -1,0 +1,75 @@
+# Cloud Run Service Configuration
+# Use this file with: gcloud run services replace service.yaml
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: documint-ai
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/cpu-throttling: "false"
+    spec:
+      containerConcurrency: 100
+      timeoutSeconds: 300
+      containers:
+      - image: gcr.io/PROJECT_ID/documint-ai
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+        env:
+        # Application Configuration
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "8080"
+        - name: FRONTEND_PORT
+          value: "3000"
+        - name: BACKEND_PORT
+          value: "8000"
+        
+        # Frontend Configuration
+        - name: NEXT_PUBLIC_APP_NAME
+          value: "DocuMint AI"
+        - name: NEXT_PUBLIC_FORCE_MOCK_MODE
+          value: "false"
+        - name: NEXT_PUBLIC_MAX_FILE_SIZE
+          value: "10485760"
+        - name: NEXT_PUBLIC_SUPPORTED_FORMATS
+          value: ".pdf,.doc,.docx"
+        
+        # Backend Configuration
+        - name: ALLOWED_ORIGINS
+          value: "https://*.run.app,http://localhost:3000"
+        
+        # Secrets (these should be set via Cloud Run secrets or environment variables)
+        # - name: GEMINI_API_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: gemini-api-key
+        #       key: api-key
+        # - name: SECRET_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: documint-secret-key
+        #       key: secret-key
+        # - name: GOOGLE_CLOUD_CREDENTIALS_JSON
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: gcp-credentials
+        #       key: credentials.json
+        
+      scaling:
+        minScale: 0
+        maxScale: 10
+  traffic:
+  - percent: 100
+    latestRevision: true

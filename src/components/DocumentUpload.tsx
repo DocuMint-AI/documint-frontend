@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Lightbulb } from 'lucide-react';
-import { uploadDocument, processDocument } from '@/lib/api';
+import { uploadDocument, processDocument, getDocumentText } from '@/lib/api';
 
 interface DocumentUploadProps {
   onUploadComplete?: (documentId: string) => void;
@@ -65,6 +65,9 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
         setUploadStatus('success');
         setStatusMessage(`Successfully uploaded ${uploadResult.filename}`);
         
+        // Fetch document text from backend
+        const textResult = await getDocumentText(uploadResult.documentId);
+        
         // Start processing the document
         setIsProcessing(true);
         
@@ -80,11 +83,23 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
           
           // Store document data for workspace and clear processing flag
           if (typeof window !== 'undefined') {
+            // Store current document with analysis
             localStorage.setItem('currentDocument', JSON.stringify({
               id: uploadResult.documentId,
               filename: uploadResult.filename,
               analysis: processResult.analysis
             }));
+            
+            // Store document text separately if available
+            if (textResult.success) {
+              localStorage.setItem(`document_${uploadResult.documentId}`, JSON.stringify({
+                text: textResult.text,
+                filename: textResult.filename || uploadResult.filename,
+                wordCount: textResult.word_count,
+                pageCount: textResult.page_count
+              }));
+            }
+            
             // Store upload timestamp for metadata display
             localStorage.setItem(`document_${uploadResult.documentId}_uploaded`, new Date().toISOString());
             localStorage.removeItem('processingDocument');

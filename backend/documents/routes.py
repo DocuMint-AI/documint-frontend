@@ -4,9 +4,13 @@ Document handling routes for upload, processing, and AI analysis
 
 import os
 import tempfile
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, status
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, status, Request
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
+
+# Rate limiting
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from auth.routes import get_current_user
 from documents.parser import DocumentParser
@@ -15,6 +19,9 @@ from ai.dynamic_gemini_client import DynamicGeminiClient
 from utils.response import success_response, error_response
 from utils.errors import DocumentError, AIServiceError
 from config import config
+
+# Initialize rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 
 class ProcessDocumentRequest(BaseModel):
@@ -37,7 +44,9 @@ documents_router = APIRouter()
 
 
 @documents_router.post("/upload", response_model=DocumentUploadResponse)
+@limiter.limit("20/minute")  # Limit document uploads
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user)
 ):
@@ -140,8 +149,10 @@ async def upload_document(
 
 
 @documents_router.post("/process-document")
+@limiter.limit("35/minute")  # Limit intensive AI processing
 async def process_document(
-    request: ProcessDocumentRequest,
+    request: Request,
+    request_data: ProcessDocumentRequest,
     current_user: dict = Depends(get_current_user)
 ):
     """Process document with Gemini AI for insights and analysis"""
@@ -156,7 +167,7 @@ async def process_document(
             )
         
         # Get document text
-        document_text = DocumentStorage.get_document_text(user_id, session_uid, request.doc_id)
+        document_text = DocumentStorage.get_document_text(user_id, session_uid, request_data.doc_id)
         if not document_text:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -172,7 +183,7 @@ async def process_document(
         
         # Process with Dynamic Gemini Client
         gemini_client = DynamicGeminiClient()
-        analysis_result = await gemini_client.analyze_document_dynamic(request.doc_id, document_text)
+        analysis_result = await gemini_client.analyze_document_dynamic(request_data.doc_id, document_text)
         
         # Save analysis results
         DocumentStorage.save_analysis_results(user_id, session_uid, analysis_result)
@@ -192,8 +203,10 @@ async def process_document(
 
 
 @documents_router.post("/qa")
+@limiter.limit("50/minute")  # Limit Q&A requests
 async def document_qa(
-    request: QARequest,
+    request: Request,
+    request_data: QARequest,
     current_user: dict = Depends(get_current_user)
 ):
     """Answer questions about a document using Gemini AI"""
@@ -208,7 +221,7 @@ async def document_qa(
             )
         
         # Get document text
-        document_text = DocumentStorage.get_document_text(user_id, session_uid, request.doc_id)
+        document_text = DocumentStorage.get_document_text(user_id, session_uid, request_data.doc_id)
         if not document_text:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -225,7 +238,7 @@ async def document_qa(
         # Process Q&A with Dynamic Gemini Client
         gemini_client = DynamicGeminiClient()
         qa_result = await gemini_client.answer_question(
-            request.doc_id, document_text, request.query
+            request_data.doc_id, document_text, request_data.query
         )
         
         return success_response(qa_result, "Question answered successfully")
@@ -243,7 +256,8 @@ async def document_qa(
 
 
 @documents_router.get("/documents")
-async def list_documents(current_user: dict = Depends(get_current_user)):
+@limiter.limit("30/minute")  # Allow frequent document listing
+async def list_documents(request: Request, current_user: dict = Depends(get_current_user)):
     """List all documents in current session"""
     try:
         user_id = current_user["user_id"]
@@ -271,4 +285,56 @@ async def list_documents(current_user: dict = Depends(get_current_user)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error retrieving documents: {str(e)}"
+        )
+
+
+@documents_router.get("/text/{doc_id}")
+@limiter.limit("100/minute")  # Allow frequent text retrieval
+async def get_document_text(
+    request: Request,
+    doc_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get the extracted text content of a document"""
+    try:
+        user_id = current_user["user_id"]
+        session_uid = max(current_user["sessions"].keys()) if current_user["sessions"] else None
+        
+        if not session_uid:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No active session found"
+            )
+        
+        # Get document text (OCR text if available, otherwise parsed text)
+        document_text = DocumentStorage.get_document_text(user_id, session_uid, doc_id)
+        if not document_text:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found or no text content available"
+            )
+        
+        # Get document metadata for additional info
+        metadata = DocumentStorage.get_document_metadata(user_id, session_uid, doc_id)
+        
+        # Calculate basic stats
+        word_count = len(document_text.split())
+        page_count = metadata.get("page_count") if metadata else None
+        
+        response_data = {
+            "doc_id": doc_id,
+            "text": document_text,
+            "word_count": word_count,
+            "page_count": page_count,
+            "filename": metadata.get("filename") if metadata else None
+        }
+        
+        return success_response(response_data, "Document text retrieved successfully")
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving document text: {str(e)}"
         )
