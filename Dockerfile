@@ -99,6 +99,7 @@ COPY scripts/ ./scripts/
 RUN mkdir -p \
     /var/log/documint \
     /app/backend/data/system \
+    /app/backend/.cheetah \
     && touch /app/backend/data/system/users.json \
     && echo '{}' > /app/backend/data/system/users.json
 

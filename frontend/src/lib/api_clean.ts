@@ -5,7 +5,7 @@ import { extractDocumentText, generateMockAnalysis, ExtractedDocument } from './
 const API_CONFIG = {
   baseUrl: process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000',
   endpoints: {
-    upload: process.env.NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT || '/upload',
+    upload: process.env.NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT || '/api/v1/upload',
     processDocument: process.env.NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT || '/api/v1/process-document',
     qa: process.env.NEXT_PUBLIC_BACKEND_QA_ENDPOINT || '/api/v1/qa',
   },

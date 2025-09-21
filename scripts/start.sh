@@ -49,16 +49,16 @@ NODE_ENV=production
 PORT=${PORT}
 EOF
 
-# Write Google Cloud credentials if provided
+# Write Google Cloud credentials if provided (needed for Vision API)
 if [ ! -z "$GOOGLE_CLOUD_CREDENTIALS_JSON" ]; then
-    echo "Setting up Google Cloud credentials..."
+    echo "Setting up Google Cloud credentials for Vision API..."
     mkdir -p /app/backend/.cheetah
     echo "$GOOGLE_CLOUD_CREDENTIALS_JSON" > /app/backend/.cheetah/gcp-credentials.json
     export GOOGLE_APPLICATION_CREDENTIALS="/app/backend/.cheetah/gcp-credentials.json"
+    echo "Google Cloud credentials configured at: $GOOGLE_APPLICATION_CREDENTIALS"
 fi
 
-# Credentials are now provided directly via environment variables
-# No need to write GEMINI_API_KEY or SECRET_KEY to files
+# Other credentials are now provided directly via environment variables
 
 # Create data directories
 mkdir -p /app/backend/data/system
