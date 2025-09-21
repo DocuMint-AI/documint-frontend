@@ -11,24 +11,14 @@ RUN apt-get update && apt-get install -y \
 # Set working directory for frontend
 WORKDIR /app/frontend
 
-# Copy frontend package files from root (not frontend/ subdirectory)
-COPY package*.json ./
-COPY tsconfig.json ./
-COPY next.config.js ./
-COPY tailwind.config.ts ./
-COPY postcss.config.js ./
-COPY next-env.d.ts ./
+# Copy all files from root (dockerignore will exclude unwanted files)
+COPY . .
 
 # Install frontend dependencies
 RUN npm ci --only=production
 
-# Copy frontend source code from root
-COPY src/ ./src/
-COPY public/ ./public/
-
 # Build frontend (this will read from environment variables at build time)
 RUN npm run build
-
 # Python backend stage
 FROM python:3.11-slim as backend-builder
 
