@@ -4,7 +4,7 @@
 # ----------------------------
 # Frontend Build Stage
 # ----------------------------
-FROM node:18-slim AS frontend-builder
+FROM node:20-slim AS frontend-builder
 
 # Install build essentials for native dependencies
 RUN apt-get update && apt-get install -y \
@@ -68,7 +68,7 @@ FROM python:3.11-slim AS production
 RUN apt-get update && apt-get install -y \
     curl \
     nginx \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install -g npm@latest
