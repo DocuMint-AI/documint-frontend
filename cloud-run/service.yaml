@@ -18,7 +18,7 @@ spec:
       containerConcurrency: 80
       timeoutSeconds: 900
       containers:
-      - image: gcr.io/PROJECT_ID/documint-ai
+      - image: gcr.io/oceanic-antler-471414-k3/documint-ai
         ports:
         - containerPort: 8080
         livenessProbe:
@@ -87,22 +87,22 @@ spec:
         - name: PYTHONPATH
           value: "/app/backend"
         
-        # Secrets (these should be set via Cloud Run secrets or environment variables) to be added
-        # - name: GEMINI_API_KEY
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: gemini-api-key
-        #       key: api-key
-        # - name: SECRET_KEY
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: documint-secret-key
-        #       key: secret-key
-        # - name: GOOGLE_CLOUD_CREDENTIALS_JSON
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: gcp-credentials
-        #       key: credentials.json
+        # Secrets from Google Secret Manager
+        - name: GEMINI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: gemini-api-key
+              key: latest
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: documint-secret-key
+              key: latest
+        - name: GOOGLE_CLOUD_CREDENTIALS_JSON
+          valueFrom:
+            secretKeyRef:
+              name: gcp-credentials
+              key: latest
         
       scaling:
         minScale: 1

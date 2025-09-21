@@ -23,7 +23,10 @@ EOF
 cat > /app/frontend/.env.local << EOF
 # Frontend Configuration from Cloud Run Environment Variables
 # Use relative URLs to leverage Next.js rewrites instead of direct backend calls
-# Do not set NEXT_PUBLIC_BACKEND_* variables to force relative URL usage
+NEXT_PUBLIC_BACKEND_PROTOCOL=${NEXT_PUBLIC_BACKEND_PROTOCOL:-http}
+NEXT_PUBLIC_BACKEND_HOST=${NEXT_PUBLIC_BACKEND_HOST:-localhost}
+NEXT_PUBLIC_BACKEND_PORT=${BACKEND_PORT}
+NEXT_PUBLIC_BACKEND_BASE_URL=""
 
 NEXT_PUBLIC_AUTH_REGISTER_ENDPOINT=${NEXT_PUBLIC_AUTH_REGISTER_ENDPOINT:-/register}
 NEXT_PUBLIC_AUTH_LOGIN_ENDPOINT=${NEXT_PUBLIC_AUTH_LOGIN_ENDPOINT:-/login}
@@ -49,19 +52,13 @@ EOF
 # Write Google Cloud credentials if provided
 if [ ! -z "$GOOGLE_CLOUD_CREDENTIALS_JSON" ]; then
     echo "Setting up Google Cloud credentials..."
+    mkdir -p /app/backend/.cheetah
     echo "$GOOGLE_CLOUD_CREDENTIALS_JSON" > /app/backend/.cheetah/gcp-credentials.json
     export GOOGLE_APPLICATION_CREDENTIALS="/app/backend/.cheetah/gcp-credentials.json"
 fi
 
-# Write Gemini API key if provided
-if [ ! -z "$GEMINI_API_KEY" ]; then
-    echo "$GEMINI_API_KEY" > /app/backend/.cheetah/gemini-api-key.txt
-fi
-
-# Write secret key if provided
-if [ ! -z "$SECRET_KEY" ]; then
-    echo "$SECRET_KEY" > /app/backend/.cheetah/documint-secret-key.txt
-fi
+# Credentials are now provided directly via environment variables
+# No need to write GEMINI_API_KEY or SECRET_KEY to files
 
 # Create data directories
 mkdir -p /app/backend/data/system

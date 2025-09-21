@@ -19,12 +19,12 @@ class Config:
     # Google API keys (can be set via environment variables or files)
     @property
     def GEMINI_API_KEY(self) -> Optional[str]:
-        # First try direct environment variable
+        # First try direct environment variable (preferred for Cloud Run)
         api_key = os.getenv("GEMINI_API_KEY")
         if api_key:
             return api_key
         
-        # Then try reading from file specified in environment
+        # Fallback: try reading from file (for local development)
         api_key_file = os.getenv("GEMINI_API_KEY_FILE")
         if api_key_file and os.path.exists(api_key_file):
             try:
@@ -40,12 +40,12 @@ class Config:
     # Security settings
     @property
     def SECRET_KEY(self) -> str:
-        # First try direct environment variable
+        # First try direct environment variable (preferred for Cloud Run)
         secret_key = os.getenv("SECRET_KEY")
         if secret_key:
             return secret_key
         
-        # Then try reading from file specified in environment
+        # Fallback: try reading from file (for local development)
         secret_key_file = os.getenv("SECRET_KEY_FILE")
         if secret_key_file and os.path.exists(secret_key_file):
             try:
