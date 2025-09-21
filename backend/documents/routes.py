@@ -11,7 +11,7 @@ from typing import Optional, Dict, Any
 from auth.routes import get_current_user
 from documents.parser import DocumentParser
 from documents.storage import DocumentStorage
-from ai.gemini_client import GeminiClient
+from ai.dynamic_gemini_client import DynamicGeminiClient
 from utils.response import success_response, error_response
 from utils.errors import DocumentError, AIServiceError
 from config import config
@@ -170,9 +170,9 @@ async def process_document(
                 detail="Gemini API not configured"
             )
         
-        # Process with Gemini
-        gemini_client = GeminiClient()
-        analysis_result = await gemini_client.analyze_document(request.doc_id, document_text)
+        # Process with Dynamic Gemini Client
+        gemini_client = DynamicGeminiClient()
+        analysis_result = await gemini_client.analyze_document_dynamic(request.doc_id, document_text)
         
         # Save analysis results
         DocumentStorage.save_analysis_results(user_id, session_uid, analysis_result)
@@ -222,8 +222,8 @@ async def document_qa(
                 detail="Gemini API not configured"
             )
         
-        # Process Q&A with Gemini
-        gemini_client = GeminiClient()
+        # Process Q&A with Dynamic Gemini Client
+        gemini_client = DynamicGeminiClient()
         qa_result = await gemini_client.answer_question(
             request.doc_id, document_text, request.query
         )
