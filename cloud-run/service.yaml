@@ -89,7 +89,7 @@ spec:
         - name: PYTHONPATH
           value: "/app/backend"
         
-        # Secrets (these should be set via Cloud Run secrets or environment variables)
+        # Secrets (these should be set via Cloud Run secrets or environment variables) to be added
         # - name: GEMINI_API_KEY
         #   valueFrom:
         #     secretKeyRef:
