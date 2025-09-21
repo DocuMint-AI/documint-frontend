@@ -12,7 +12,6 @@ backend/.cheetah/
 *.key
 *.pem
 *.p12
-*.json
 *secret*
 *credentials*
 
@@ -57,10 +56,10 @@ Thumbs.db
 *.swo
 *~
 
-# Documentation
-README.md
+# Documentation (except README needed for deployment)
 docs/
 *.md
+!README.md
 
 # CI/CD
 .github/
@@ -84,3 +83,7 @@ pids/
 # Temporary folders
 tmp/
 temp/
+
+# Don't copy backend directory to frontend build context
+# (it gets copied separately in the backend stage)
+!backend/
