@@ -1,0 +1,50 @@
+# Frontend-specific .dockerignore
+# Optimized for Next.js builds
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm
+.yarn/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Environment files
+.env*
+!.env.example
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+coverage/
+.nyc_output
+.jest/
+**/*.test.*
+**/*.spec.*
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# TypeScript incremental compilation
+*.tsbuildinfo
