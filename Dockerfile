@@ -11,17 +11,18 @@ RUN apt-get update && apt-get install -y \
 # Set working directory for frontend
 WORKDIR /app/frontend
 
-# Copy frontend package files
+# Copy frontend package files from root (not frontend/ subdirectory)
 COPY package*.json ./
 COPY tsconfig.json ./
 COPY next.config.js ./
 COPY tailwind.config.ts ./
 COPY postcss.config.js ./
+COPY next-env.d.ts ./
 
 # Install frontend dependencies
 RUN npm ci --only=production
 
-# Copy frontend source code
+# Copy frontend source code from root
 COPY src/ ./src/
 COPY public/ ./public/
 
@@ -74,7 +75,7 @@ WORKDIR /app
 COPY --from=backend-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=backend-builder /usr/local/bin /usr/local/bin
 
-# Copy built frontend from frontend builder
+# Copy built frontend from frontend builder (adjust paths to match where files were built)
 COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
 COPY --from=frontend-builder /app/frontend/public ./frontend/public
 COPY --from=frontend-builder /app/frontend/package*.json ./frontend/
@@ -87,8 +88,8 @@ COPY backend/ ./backend/
 # Copy startup scripts
 COPY scripts/ ./scripts/
 
-# Copy supervisor configuration
-COPY docker/supervisor.conf /etc/supervisor/conf.d/documint.conf
+# Create supervisor configuration inline (since docker/supervisor.conf doesn't exist)
+RUN mkdir -p /etc/supervisor/conf.d
 
 # Create necessary directories
 RUN mkdir -p /app/backend/data/system \
