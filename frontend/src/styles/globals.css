@@ -2,13 +2,114 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Smooth page transitions for rich UX */
-html {
-  scroll-behavior: smooth;
+/* Custom cursor styles */
+* {
+  cursor: none !important;
+}
+
+/* Fallback for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    cursor: auto !important;
+  }
+  
+  .custom-cursor {
+    display: none !important;
+  }
+}
+
+/* Hide cursor on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  * {
+    cursor: auto !important;
+  }
+  
+  .custom-cursor {
+    display: none !important;
+  }
 }
 
 body {
   transition: background-color 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #000;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  z-index: 999999;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease-out, width 0.2s ease-out, height 0.2s ease-out, border-radius 0.2s ease-out;
+  will-change: transform;
+  opacity: 1;
+  isolation: isolate;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Dark theme adjustments */
+.dark .custom-cursor {
+  background-color: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.custom-cursor.hover {
+  width: 32px;
+  height: 32px;
+  background-color: #fff;
+  opacity: 1;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  mix-blend-mode: difference;
+}
+
+.dark .custom-cursor.hover {
+  background-color: #000;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  mix-blend-mode: difference;
+}
+
+.custom-cursor.click {
+  width: 14px;
+  height: 14px;
+  opacity: 1;
+}
+
+.custom-cursor.text {
+  width: 3px;
+  height: 24px;
+  border-radius: 1px;
+  background-color: #000;
+  opacity: 1;
+  border: none;
+}
+
+.dark .custom-cursor.text {
+  background-color: #fff;
+}
+
+/* Ensure text inputs show appropriate cursor */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea {
+  cursor: text !important;
+}
+
+/* Resizable elements */
+.resize,
+[style*="resize"] {
+  cursor: nw-resize !important;
+}
+
+/* Smooth page transitions for rich UX */
+html {
+  scroll-behavior: smooth;
 }
 
 /* Page transition effects */
