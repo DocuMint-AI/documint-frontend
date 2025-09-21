@@ -6,18 +6,21 @@ FROM node:18-slim AS frontend-builder
 # Set working directory
 WORKDIR /app/frontend
 
-# Copy only package.json and package-lock.json first
+# Copy only package files first for caching
 COPY package*.json ./
 
-# Install all dependencies (dev included, needed for Next.js build)
+# Install all dependencies (dev dependencies needed for Next.js build)
 RUN npm ci
 
-# Copy the rest of frontend source
+# Copy frontend source and config files required for build
 COPY src/ ./src
 COPY public/ ./public
 COPY next.config.js ./
+COPY tsconfig.json ./                # required for path aliases
+COPY postcss.config.js ./            # Tailwind/PostCSS config
+COPY tailwind.config.ts ./           # Tailwind config
 
-# Build the frontend
+# Build frontend
 RUN npm run build
 
 # ----------------------------
@@ -25,7 +28,7 @@ RUN npm run build
 # ----------------------------
 FROM python:3.11-slim AS backend-builder
 
-# Install system dependencies for building Python packages
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
@@ -40,7 +43,7 @@ WORKDIR /app/backend
 # Copy backend requirements
 COPY backend/requirements.txt ./
 
-# Install backend dependencies
+# Install Python dependencies
 RUN uv pip install --system -r requirements.txt
 
 # Copy backend source
@@ -51,7 +54,7 @@ COPY backend/ ./backend
 # ----------------------------
 FROM python:3.11-slim
 
-# Install system dependencies, Node.js, supervisor
+# Install system dependencies, Node.js, and supervisor
 RUN apt-get update && apt-get install -y \
     curl \
     supervisor \
@@ -63,22 +66,25 @@ RUN apt-get update && apt-get install -y \
 # Install uv for Python package management
 RUN pip install uv
 
-# Create app user
+# Create non-root user
 RUN useradd --create-home --shell /bin/bash app
 
 # Set working directory
 WORKDIR /app
 
-# Copy Python dependencies from backend-builder
+# Copy Python dependencies from backend builder
 COPY --from=backend-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=backend-builder /usr/local/bin /usr/local/bin
 
-# Copy built frontend from frontend-builder
+# Copy built frontend from frontend builder
 COPY --from=frontend-builder /app/frontend/.next ./frontend/.next
 COPY --from=frontend-builder /app/frontend/public ./frontend/public
 COPY --from=frontend-builder /app/frontend/package*.json ./frontend/
 COPY --from=frontend-builder /app/frontend/node_modules ./frontend/node_modules
 COPY --from=frontend-builder /app/frontend/next.config.js ./frontend/
+COPY --from=frontend-builder /app/frontend/tsconfig.json ./frontend/
+COPY --from=frontend-builder /app/frontend/postcss.config.js ./frontend/
+COPY --from=frontend-builder /app/frontend/tailwind.config.ts ./frontend/
 
 # Copy backend source code
 COPY backend/ ./backend/
