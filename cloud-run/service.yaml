@@ -1,5 +1,5 @@
 # Cloud Run Service Configuration
-# Use: gcloud run services replace service.yaml
+# Use this file with: gcloud run services replace service.yaml
 
 apiVersion: serving.knative.dev/v1
 kind: Service
@@ -7,6 +7,7 @@ metadata:
   name: documint-ai
   annotations:
     run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
 spec:
   template:
     metadata:
@@ -17,98 +18,97 @@ spec:
       containerConcurrency: 80
       timeoutSeconds: 900
       containers:
-        - image: gcr.io/PROJECT_ID/documint-ai
-          ports:
-            - containerPort: 8080
-          livenessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 3
-            failureThreshold: 2
-          startupProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 6
-          resources:
-            limits:
-              cpu: "2"
-              memory: "2Gi"
-            requests:
-              cpu: "1"
-              memory: "1Gi"
-          env:
-            # General
-            - name: NODE_ENV
-              value: "production"
-            - name: PORT
-              value: "8080"
-            - name: FRONTEND_PORT
-              value: "3000"
-            - name: BACKEND_PORT
-              value: "8000"
-            
-            # Frontend
-            - name: NEXT_PUBLIC_APP_NAME
-              value: "DocuMint AI"
-            - name: NEXT_PUBLIC_FORCE_MOCK_MODE
-              value: "false"
-            - name: NEXT_PUBLIC_MAX_FILE_SIZE
-              value: "10485760"
-            - name: NEXT_PUBLIC_SUPPORTED_FORMATS
-              value: ".pdf,.doc,.docx"
-            
-            # Backend
-            - name: ALLOWED_ORIGINS
-              value: "https://*.run.app,http://localhost:3000"
-            - name: PYTHON_ENV
-              value: "production"
-            - name: UVICORN_HOST
-              value: "0.0.0.0"
-            - name: UVICORN_PORT
-              value: "8000"
-            
-            # Performance / Paths
-            - name: PYTHONUNBUFFERED
-              value: "1"
-            - name: PYTHONPATH
-              value: "/app/backend"
-            
-            # Secrets (Cloud Run Secret Manager recommended)
-            # - name: GEMINI_API_KEY
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: gemini-api-key
-            #       key: api-key
-            # - name: SECRET_KEY
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: documint-secret-key
-            #       key: secret-key
-            # - name: GOOGLE_CLOUD_CREDENTIALS_JSON
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: gcp-credentials
-            #       key: credentials.json
-
+      - image: gcr.io/PROJECT_ID/documint-ai
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
+        resources:
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+          requests:
+            cpu: "1"
+            memory: "1Gi"
+        env:
+        # Application Configuration
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "8080"
+        - name: FRONTEND_PORT
+          value: "3000"
+        - name: BACKEND_PORT
+          value: "8000"
+        
+        # Frontend Configuration
+        - name: NEXT_PUBLIC_APP_NAME
+          value: "DocuMint AI"
+        - name: NEXT_PUBLIC_FORCE_MOCK_MODE
+          value: "false"
+        - name: NEXT_PUBLIC_MAX_FILE_SIZE
+          value: "10485760"
+        - name: NEXT_PUBLIC_SUPPORTED_FORMATS
+          value: ".pdf,.doc,.docx"
+        
+        # Backend Configuration
+        - name: ALLOWED_ORIGINS
+          value: "https://*.run.app,http://localhost:3000"
+        - name: PYTHON_ENV
+          value: "production"
+        - name: UVICORN_HOST
+          value: "0.0.0.0"
+        - name: UVICORN_PORT
+          value: "8000"
+        
+        # Performance Configuration
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PYTHONPATH
+          value: "/app/backend"
+        
+        # Secrets (these should be set via Cloud Run secrets or environment variables)
+        # - name: GEMINI_API_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: gemini-api-key
+        #       key: api-key
+        # - name: SECRET_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: documint-secret-key
+        #       key: secret-key
+        # - name: GOOGLE_CLOUD_CREDENTIALS_JSON
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: gcp-credentials
+        #       key: credentials.json
+        
       scaling:
         minScale: 1
         maxScale: 10
-
   traffic:
-    - percent: 100
-      latestRevision: true
+  - percent: 100
+    latestRevision: true
