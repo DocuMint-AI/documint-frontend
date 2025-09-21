@@ -5,7 +5,6 @@ echo "Starting DocuMint AI services..."
 
 # Set default values for Cloud Run
 export PORT=${PORT:-8080}
-export FRONTEND_PORT=${FRONTEND_PORT:-3000}
 export BACKEND_PORT=${BACKEND_PORT:-8000}
 
 # Create environment files from Cloud Run environment variables
@@ -17,10 +16,10 @@ cat > /app/backend/.env << EOF
 GEMINI_API_KEY=${GEMINI_API_KEY}
 GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
 SECRET_KEY=${SECRET_KEY}
-ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000,https://*.run.app}
+ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:${PORT},https://*.run.app}
 EOF
 
-# Frontend environment setup  
+# Frontend environment setup - Frontend will run on the main PORT
 cat > /app/frontend/.env.local << EOF
 # Frontend Configuration from Cloud Run Environment Variables
 NEXT_PUBLIC_BACKEND_PROTOCOL=${NEXT_PUBLIC_BACKEND_PROTOCOL:-http}
@@ -40,13 +39,13 @@ NEXT_PUBLIC_BACKEND_QA_ENDPOINT=${NEXT_PUBLIC_BACKEND_QA_ENDPOINT:-/api/v1/qa}
 NEXT_PUBLIC_BACKEND_DOCUMENTS_ENDPOINT=${NEXT_PUBLIC_BACKEND_DOCUMENTS_ENDPOINT:-/api/v1/documents}
 NEXT_PUBLIC_BACKEND_HEALTH_ENDPOINT=${NEXT_PUBLIC_BACKEND_HEALTH_ENDPOINT:-/health}
 
-NEXT_PUBLIC_FRONTEND_PORT=${FRONTEND_PORT}
 NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME:-DocuMint AI}
 NEXT_PUBLIC_MAX_FILE_SIZE=${NEXT_PUBLIC_MAX_FILE_SIZE:-10485760}
 NEXT_PUBLIC_SUPPORTED_FORMATS=${NEXT_PUBLIC_SUPPORTED_FORMATS:-.pdf,.doc,.docx}
 NEXT_PUBLIC_FORCE_MOCK_MODE=${NEXT_PUBLIC_FORCE_MOCK_MODE:-false}
 
 NODE_ENV=production
+PORT=${PORT}
 EOF
 
 # Write Google Cloud credentials if provided
@@ -89,74 +88,16 @@ for i in {1..30}; do
     sleep 1
 done
 
-# Start frontend service
-echo "Starting Next.js frontend on port $FRONTEND_PORT..."
+# Start frontend service on the main PORT (8080 for Cloud Run)
+echo "Starting Next.js frontend on port $PORT..."
 cd /app/frontend
-npm start -- --port $FRONTEND_PORT --hostname 0.0.0.0 &
+npm start -- --port $PORT --hostname 0.0.0.0 &
 FRONTEND_PID=$!
-
-# Setup nginx reverse proxy to serve both on PORT (for Cloud Run)
-echo "Setting up reverse proxy on port $PORT..."
-cat > /tmp/nginx.conf << EOF
-events {
-    worker_connections 1024;
-}
-
-http {
-    upstream backend {
-        server localhost:$BACKEND_PORT;
-    }
-    
-    upstream frontend {
-        server localhost:$FRONTEND_PORT;
-    }
-    
-    server {
-        listen $PORT;
-        server_name _;
-        
-        # Health check endpoint
-        location /health {
-            proxy_pass http://backend;
-            proxy_set_header Host \$host;
-            proxy_set_header X-Real-IP \$remote_addr;
-            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto \$scheme;
-        }
-        
-        # API endpoints
-        location ~ ^/(api|register|login|logout|me|update-password) {
-            proxy_pass http://backend;
-            proxy_set_header Host \$host;
-            proxy_set_header X-Real-IP \$remote_addr;
-            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto \$scheme;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-        }
-        
-        # Frontend (everything else)
-        location / {
-            proxy_pass http://frontend;
-            proxy_set_header Host \$host;
-            proxy_set_header X-Real-IP \$remote_addr;
-            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto \$scheme;
-            proxy_set_header Upgrade \$http_upgrade;
-            proxy_set_header Connection "upgrade";
-        }
-    }
-}
-EOF
-
-# Start nginx
-nginx -c /tmp/nginx.conf -g "daemon off;" &
-NGINX_PID=$!
 
 # Function to cleanup on exit
 cleanup() {
     echo "Shutting down services..."
-    kill $BACKEND_PID $FRONTEND_PID $NGINX_PID 2>/dev/null || true
+    kill $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
     wait
 }
 
@@ -164,10 +105,9 @@ cleanup() {
 trap cleanup SIGTERM SIGINT
 
 echo "All services started successfully!"
-echo "- Backend running on port $BACKEND_PORT"
-echo "- Frontend running on port $FRONTEND_PORT"  
-echo "- Reverse proxy running on port $PORT"
-echo "Ready to receive requests..."
+echo "- Backend running on port $BACKEND_PORT" 
+echo "- Frontend running on port $PORT"
+echo "Ready to receive requests on port $PORT..."
 
 # Wait for any process to exit
 wait -n

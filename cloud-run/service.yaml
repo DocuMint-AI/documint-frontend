@@ -58,8 +58,6 @@ spec:
           value: "production"
         - name: PORT
           value: "8080"
-        - name: FRONTEND_PORT
-          value: "3000"
         - name: BACKEND_PORT
           value: "8000"
         
@@ -75,7 +73,7 @@ spec:
         
         # Backend Configuration
         - name: ALLOWED_ORIGINS
-          value: "https://*.run.app,http://localhost:3000"
+          value: "https://*.run.app,http://localhost:8080"
         - name: PYTHON_ENV
           value: "production"
         - name: UVICORN_HOST
