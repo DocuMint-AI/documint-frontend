@@ -71,15 +71,35 @@ class BackendConfig {
   }
 
   static buildURL(endpoint: string): string {
-    // Use baseURL if available, otherwise construct from parts
-    const base = this.baseURL || `${this.protocol}://${this.host}:${this.port}`;
+    // Check if any backend environment variables are set
+    const base = this.baseURL;
+    const protocol = process.env.NEXT_PUBLIC_BACKEND_PROTOCOL;
+    const host = process.env.NEXT_PUBLIC_BACKEND_HOST;
+    const port = process.env.NEXT_PUBLIC_BACKEND_PORT;
     
-    // If baseURL is empty, use relative URLs (for Next.js proxy)
-    if (!base || base === '' || base === 'undefined') {
+    // If no backend variables are set, use relative URLs (for Next.js proxy)
+    if (!base && !protocol && !host && !port) {
       return endpoint;
     }
     
-    return `${base}${endpoint}`;
+    // If baseURL is explicitly empty, use relative URLs
+    if (base === '' || base === 'undefined') {
+      return endpoint;
+    }
+    
+    // If we have a complete baseURL, use it
+    if (base && base !== 'http://localhost:8000') {
+      return `${base}${endpoint}`;
+    }
+    
+    // For localhost development or when explicitly set to localhost, use relative URLs in production
+    if (process.env.NODE_ENV === 'production') {
+      return endpoint;
+    }
+    
+    // Default fallback for development
+    const fallbackBase = base || `${this.protocol}://${this.host}:${this.port}`;
+    return `${fallbackBase}${endpoint}`;
   }
 
   // Endpoint getters

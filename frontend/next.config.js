@@ -8,49 +8,39 @@ const nextConfig = {
   },
   // Proxy API requests to backend
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_BASE_URL;
-    
-    // If no backend URL is set, assume backend is on localhost:8000 (for local dev)
-    // If backend URL is empty, we're running in container and backend is internal
-    const shouldProxy = !backendUrl || backendUrl === '';
-    
-    if (!shouldProxy) {
-      return [];
-    }
-    
-    const targetUrl = backendUrl || 'http://localhost:8000';
-    
+    // Always enable rewrites for containerized deployment
+    // This ensures all API calls go through Next.js proxy
     return [
       // API routes
       {
         source: '/api/:path*',
-        destination: `${targetUrl}/api/:path*`,
+        destination: 'http://localhost:8000/api/:path*',
       },
       // Auth routes
       {
         source: '/register',
-        destination: `${targetUrl}/register`,
+        destination: 'http://localhost:8000/register',
       },
       {
         source: '/login',
-        destination: `${targetUrl}/login`,
+        destination: 'http://localhost:8000/login',
       },
       {
         source: '/logout',
-        destination: `${targetUrl}/logout`,
+        destination: 'http://localhost:8000/logout',
       },
       {
         source: '/me',
-        destination: `${targetUrl}/me`,
+        destination: 'http://localhost:8000/me',
       },
       {
         source: '/update-password',
-        destination: `${targetUrl}/update-password`,
+        destination: 'http://localhost:8000/update-password',
       },
       // Health check
       {
         source: '/health',
-        destination: `${targetUrl}/health`,
+        destination: 'http://localhost:8000/health',
       },
     ];
   },
