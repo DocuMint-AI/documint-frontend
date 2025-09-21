@@ -1,6 +1,4 @@
 # Multi-stage optimized Dockerfile for Documint AI
-# Fixes build issues and reduces image size
-
 # ----------------------------
 # Frontend Build Stage
 # ----------------------------
