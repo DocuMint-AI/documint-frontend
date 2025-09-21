@@ -17,9 +17,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} transition-all duration-700 ease-in-out`}>
         <ThemeProvider>
-          {children}
+          <div className="page-transition">
+            {children}
+          </div>
         </ThemeProvider>
       </body>
     </html>

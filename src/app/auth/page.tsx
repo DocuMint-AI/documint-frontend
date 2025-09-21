@@ -6,6 +6,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { AuthService, SessionManager, LoginCredentials, RegisterCredentials } from '@/lib/auth';
 import { MathCaptcha } from '@/components/MathCaptcha';
 import AuthGuard from '@/components/AuthGuard';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface FormData {
   username: string;
@@ -195,13 +196,9 @@ export default function AuthPage() {
         <div className="multi-blob multi-blob-3"></div>
         
         {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          className="fixed top-4 right-4 p-3 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 panel-glow z-10"
-          aria-label="Toggle theme"
-        >
-          {isDarkMode ? '☀️' : '🌙'}
-        </button>
+        <div className="fixed top-4 right-4 z-10">
+          <ThemeToggle />
+        </div>
 
         <div className="w-full max-w-md">
         <div className="panel-translucent rounded-xl p-8 panel-glow animate-fade-in">
