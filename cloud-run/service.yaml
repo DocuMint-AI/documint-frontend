@@ -15,16 +15,43 @@ spec:
         run.googleapis.com/execution-environment: gen2
         run.googleapis.com/cpu-throttling: "false"
     spec:
-      containerConcurrency: 100
-      timeoutSeconds: 300
+      containerConcurrency: 80
+      timeoutSeconds: 900
       containers:
       - image: gcr.io/PROJECT_ID/documint-ai
         ports:
         - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 6
         resources:
           limits:
-            cpu: "1"
+            cpu: "2"
             memory: "2Gi"
+          requests:
+            cpu: "1"
+            memory: "1Gi"
         env:
         # Application Configuration
         - name: NODE_ENV
@@ -49,6 +76,18 @@ spec:
         # Backend Configuration
         - name: ALLOWED_ORIGINS
           value: "https://*.run.app,http://localhost:3000"
+        - name: PYTHON_ENV
+          value: "production"
+        - name: UVICORN_HOST
+          value: "0.0.0.0"
+        - name: UVICORN_PORT
+          value: "8000"
+        
+        # Performance Configuration
+        - name: PYTHONUNBUFFERED
+          value: "1"
+        - name: PYTHONPATH
+          value: "/app/backend"
         
         # Secrets (these should be set via Cloud Run secrets or environment variables)
         # - name: GEMINI_API_KEY
@@ -68,7 +107,7 @@ spec:
         #       key: credentials.json
         
       scaling:
-        minScale: 0
+        minScale: 1
         maxScale: 10
   traffic:
   - percent: 100
