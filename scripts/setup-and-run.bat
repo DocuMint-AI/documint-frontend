@@ -193,8 +193,10 @@ if !errorlevel! neq 0 (
 
 REM Install frontend dependencies
 call :log_info "Installing frontend dependencies..."
-if exist "package.json" (
+if exist "frontend\package.json" (
+    cd frontend
     npm install
+    cd ..
     if !errorlevel! equ 0 (
         call :log_success "Frontend dependencies installed successfully"
     ) else (
@@ -202,7 +204,7 @@ if exist "package.json" (
         exit /b 1
     )
 ) else (
-    call :log_error "package.json not found in project root"
+    call :log_error "frontend\package.json not found"
     exit /b 1
 )
 
@@ -281,7 +283,7 @@ timeout /t 5 /nobreak >nul
 
 REM Start frontend server
 call :log_info "Starting frontend server on http://localhost:3000..."
-start "DocuMint Frontend" cmd /k "npm run dev"
+start "DocuMint Frontend" cmd /k "cd frontend && npm run dev"
 
 call :log_success "Both servers are starting in separate windows..."
 call :log_info "Frontend: http://localhost:3000"

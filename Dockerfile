@@ -7,18 +7,19 @@ FROM node:18-slim AS frontend-builder
 WORKDIR /app/frontend
 
 # Copy only package files first for caching
-COPY package*.json ./
+COPY frontend/package*.json ./
 
 # Install all dependencies (dev dependencies needed for Next.js build)
 RUN npm ci
 
 # Copy frontend source and config files required for build
-COPY src/ ./src
-COPY public/ ./public
-COPY next.config.js ./
-COPY tsconfig.json ./                # required for path aliases
-COPY postcss.config.js ./            # Tailwind/PostCSS config
-COPY tailwind.config.ts ./           # Tailwind config
+COPY frontend/src/ ./src
+COPY frontend/public/ ./public
+COPY frontend/next.config.js ./
+COPY frontend/tsconfig.json ./                # required for path aliases
+COPY frontend/postcss.config.js ./            # Tailwind/PostCSS config
+COPY frontend/tailwind.config.ts ./           # Tailwind config
+COPY frontend/next-env.d.ts ./                # Next.js TypeScript declarations
 
 # Build frontend
 RUN npm run build
@@ -46,8 +47,8 @@ COPY backend/requirements.txt ./
 # Install Python dependencies
 RUN uv pip install --system -r requirements.txt
 
-# Copy backend source
-COPY backend/ ./backend
+# Copy backend source (copy to correct location)
+COPY backend/ ./
 
 # ----------------------------
 # Production Stage
@@ -85,6 +86,7 @@ COPY --from=frontend-builder /app/frontend/next.config.js ./frontend/
 COPY --from=frontend-builder /app/frontend/tsconfig.json ./frontend/
 COPY --from=frontend-builder /app/frontend/postcss.config.js ./frontend/
 COPY --from=frontend-builder /app/frontend/tailwind.config.ts ./frontend/
+COPY --from=frontend-builder /app/frontend/next-env.d.ts ./frontend/
 
 # Copy backend source code
 COPY backend/ ./backend/

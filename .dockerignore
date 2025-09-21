@@ -2,10 +2,12 @@
 # This prevents sensitive files from being copied to the Docker image
 
 # Environment files (these should be passed as Cloud Run environment variables)
-.env
-.env.local
-.env.production
-.env.development
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+frontend/.env.development
+backend/.env
+backend/.env.local
 
 # Secret files (these should be passed as Cloud Run environment variables)
 backend/.cheetah/
@@ -24,17 +26,17 @@ backend/.cheetah/
 *.pid
 
 # Node.js
-node_modules/
+frontend/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
 # Next.js
-.next/
-out/
-build/
-dist/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/dist/
 
 # Python
 __pycache__/
@@ -42,9 +44,9 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-.venv/
+backend/env/
+backend/venv/
+backend/.venv/
 .pytest_cache/
 .coverage
 htmlcov/
@@ -56,7 +58,7 @@ Thumbs.db
 *.swo
 *~
 
-# Documentation (except README needed for deployment)
+# Documentation
 docs/
 *.md
 !README.md
@@ -83,7 +85,3 @@ pids/
 # Temporary folders
 tmp/
 temp/
-
-# Don't copy backend directory to frontend build context
-# (it gets copied separately in the backend stage)
-!backend/

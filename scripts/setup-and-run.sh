@@ -165,11 +165,13 @@ main() {
     
     # Install frontend dependencies
     log_info "Installing frontend dependencies..."
-    if [ -f "package.json" ]; then
+    if [ -f "frontend/package.json" ]; then
+        cd frontend
         npm install
+        cd ..
         log_success "Frontend dependencies installed successfully"
     else
-        log_error "package.json not found in project root"
+        log_error "frontend/package.json not found"
         exit 1
     fi
     
@@ -236,8 +238,10 @@ EOF
     
     # Start frontend server
     log_info "Starting frontend server on http://localhost:3000..."
+    cd frontend
     npm run dev &
     FRONTEND_PID=$!
+    cd ..
     
     log_success "Both servers are starting..."
     log_info "Frontend: http://localhost:3000"

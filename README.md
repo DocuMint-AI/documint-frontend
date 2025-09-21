@@ -24,29 +24,42 @@ A powerful Next.js 14 application for AI-powered legal document analysis, featur
 ## 📁 Project Structure
 
 ```
-src/
-├── app/                    # Next.js 14 App Router
-│   ├── layout.tsx         # Root layout with theme provider
-│   ├── page.tsx           # Home page (redirects to upload)
-│   ├── upload/            # Document upload page
-│   ├── workspace/         # Main analysis workspace
-│   └── settings/          # Configuration and settings
-├── components/            # Reusable React components
-│   ├── Layout.tsx         # Shared layout component
-│   ├── ThemeToggle.tsx    # Dark/light mode toggle
-│   ├── DocumentUpload.tsx # File upload component
-│   ├── ResizableDivider.tsx # Panel resize functionality
-│   └── panels/            # Analysis panel components
-│       ├── DocumentPanel.tsx
-│       ├── InsightsPanel.tsx
-│       └── QAPanel.tsx
-├── context/               # React context providers
-│   └── ThemeContext.tsx   # Theme state management
-├── lib/                   # Utility functions
-│   ├── api.ts            # API calls (mock & real)
-│   └── theme.ts          # Material UI theme configuration
-└── styles/               # Global styles
-    └── globals.css       # Tailwind CSS imports
+frontend/                  # Frontend Next.js application
+├── src/
+│   ├── app/              # Next.js 14 App Router
+│   │   ├── layout.tsx    # Root layout with theme provider
+│   │   ├── page.tsx      # Home page (redirects to upload)
+│   │   ├── upload/       # Document upload page
+│   │   ├── workspace/    # Main analysis workspace
+│   │   └── settings/     # Configuration and settings
+│   ├── components/       # Reusable React components
+│   │   ├── Layout.tsx    # Shared layout component
+│   │   ├── ThemeToggle.tsx # Dark/light mode toggle
+│   │   ├── DocumentUpload.tsx # File upload component
+│   │   ├── ResizableDivider.tsx # Panel resize functionality
+│   │   └── panels/       # Analysis panel components
+│   │       ├── DocumentPanel.tsx
+│   │       ├── InsightsPanel.tsx
+│   │       └── QAPanel.tsx
+│   ├── context/          # React context providers
+│   │   └── ThemeContext.tsx # Theme state management
+│   ├── lib/              # Utility functions
+│   │   ├── api.ts        # API calls (mock & real)
+│   │   └── theme.ts      # Material UI theme configuration
+│   └── styles/           # Global styles
+│       └── globals.css   # Tailwind CSS imports
+├── package.json          # Frontend dependencies
+├── next.config.js        # Next.js configuration
+├── tailwind.config.ts    # Tailwind CSS configuration
+└── tsconfig.json         # TypeScript configuration
+
+backend/                   # FastAPI Python backend
+├── ai/                   # AI processing modules
+├── auth/                 # Authentication system
+├── documents/            # Document processing
+├── utils/                # Utility functions
+├── main.py              # FastAPI application entry
+└── requirements.txt     # Python dependencies
 ```
 
 ## 🚀 Getting Started
@@ -72,9 +85,9 @@ src/
 
 3. **Configure environment variables**
    ```bash
-   cp .env.example .env.local
+   cp frontend/.env.example frontend/.env.local
    ```
-   Edit `.env.local` to customize API endpoints and configuration:
+   Edit `frontend/.env.local` to customize API endpoints and configuration:
    ```env
    NEXT_PUBLIC_BACKEND_BASE_URL=http://localhost:8000
    NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT=/upload
@@ -87,6 +100,7 @@ src/
 
 4. **Start the development server**
    ```bash
+   cd frontend
    npm run dev
    # or
    yarn dev
@@ -178,12 +192,14 @@ Optimized for various screen sizes:
 
 ### Vercel (Recommended)
 ```bash
+cd frontend
 npm run build
 vercel --prod
 ```
 
 ### Other Platforms
 ```bash
+cd frontend
 npm run build
 npm start
 ```
