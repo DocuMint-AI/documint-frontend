@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SessionManager } from '@/lib/auth';
 import ProfileAvatar from './ProfileAvatar';
+import UpdatePasswordModal from './UpdatePasswordModal';
 import { ChevronDown, User, Key, LogOut, Settings } from 'lucide-react';
 
 interface ProfileDropdownProps {
@@ -14,6 +15,7 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ className = ''
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [username, setUsername] = useState<string>('');
+  const [showUpdatePassword, setShowUpdatePassword] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,9 +44,12 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ className = ''
   };
 
   const handleUpdatePassword = () => {
-    // TODO: Implement password update modal
-    alert('Password update feature coming soon!');
+    setShowUpdatePassword(true);
     setIsOpen(false);
+  };
+
+  const handleCloseUpdatePassword = () => {
+    setShowUpdatePassword(false);
   };
 
   const handleSettings = () => {
@@ -122,6 +127,13 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ className = ''
           </div>
         </div>
       )}
+      
+      {/* Update Password Modal */}
+      <UpdatePasswordModal
+        isOpen={showUpdatePassword}
+        onClose={handleCloseUpdatePassword}
+        username={username}
+      />
     </div>
   );
 };

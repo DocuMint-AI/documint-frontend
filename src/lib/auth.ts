@@ -22,6 +22,11 @@ export interface AuthResponse {
   error?: string;
 }
 
+export interface UpdatePasswordCredentials {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface LoginResponse extends AuthResponse {
   data?: {
     access_token: string;
@@ -90,6 +95,10 @@ class BackendConfig {
 
   static get healthEndpoint(): string {
     return this.getEnvVar('NEXT_PUBLIC_BACKEND_HEALTH_ENDPOINT', '/health');
+  }
+
+  static get updatePasswordEndpoint(): string {
+    return this.getEnvVar('NEXT_PUBLIC_AUTH_UPDATE_PASSWORD_ENDPOINT', '/update-password');
   }
 }
 
@@ -332,6 +341,24 @@ export class AuthService {
   static async checkHealth(): Promise<AuthResponse> {
     return this.makeRequest(BackendConfig.healthEndpoint, {
       method: 'GET',
+    });
+  }
+
+  static async updatePassword(credentials: UpdatePasswordCredentials): Promise<AuthResponse> {
+    const session = SessionManager.getSession();
+    if (!session?.access_token) {
+      return { success: false, error: 'Not logged in' };
+    }
+
+    return this.makeRequest(BackendConfig.updatePasswordEndpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        current_password: credentials.currentPassword,
+        new_password: credentials.newPassword,
+      }),
     });
   }
 }

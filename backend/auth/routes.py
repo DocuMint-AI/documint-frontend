@@ -10,7 +10,8 @@ from datetime import timedelta
 
 from auth.utils import (
     create_user, authenticate_user, create_session, 
-    create_access_token, verify_token, get_user
+    create_access_token, verify_token, get_user,
+    update_user_password
 )
 from config import config
 
@@ -23,6 +24,11 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     username: str
     password: str
+
+
+class UpdatePassword(BaseModel):
+    current_password: str
+    new_password: str
 
 
 class Token(BaseModel):
@@ -146,3 +152,48 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         username=current_user["username"],
         session_uid=latest_session or ""
     )
+
+
+@auth_router.post("/update-password")
+async def update_password(
+    password_data: UpdatePassword,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user password"""
+    try:
+        # Validate new password strength (basic validation)
+        if len(password_data.new_password) < 8:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password must be at least 8 characters long"
+            )
+        
+        # Check if new password is different from current
+        if password_data.current_password == password_data.new_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password must be different from current password"
+            )
+        
+        # Update the password
+        success = update_user_password(
+            current_user["username"],
+            password_data.current_password,
+            password_data.new_password
+        )
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Current password is incorrect"
+            )
+        
+        return {"message": "Password updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error updating password: {str(e)}"
+        )

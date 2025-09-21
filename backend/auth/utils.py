@@ -129,6 +129,26 @@ def authenticate_user(username: str, password: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def update_user_password(username: str, current_password: str, new_password: str) -> bool:
+    """Update a user's password after verifying the current password"""
+    # First authenticate with current password
+    user = authenticate_user(username, current_password)
+    if not user:
+        return False
+    
+    # Load all users
+    users = load_users()
+    
+    # Update the password hash
+    users[username]["password_hash"] = hash_password(new_password)
+    users[username]["updated_at"] = datetime.utcnow().isoformat()
+    
+    # Save users back to file
+    save_users(users)
+    
+    return True
+
+
 def get_session_path(user_id: str, session_uid: str) -> str:
     """Get the full path to a user's session directory"""
     return os.path.join(config.DATA_DIR, user_id, session_uid)
