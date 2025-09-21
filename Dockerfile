@@ -1,7 +1,7 @@
 # Multi-stage optimized Dockerfile for Documint AI
-# ----------------------------
+# -----------------------------
 # Frontend Build Stage
-# ----------------------------
+# -----------------------------
 FROM node:18-slim AS frontend-builder
 
 # Install build essentials for native dependencies
