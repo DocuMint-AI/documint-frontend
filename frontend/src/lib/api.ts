@@ -249,7 +249,14 @@ export const uploadDocument = async (file: File): Promise<UploadResponse> => {
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.upload}`, {
+      // Use relative URL in production or when baseURL is empty
+      const baseUrl = API_CONFIG.baseUrl;
+      const isProduction = process.env.NODE_ENV === 'production';
+      const uploadUrl = (isProduction || !baseUrl || baseUrl === '') 
+        ? API_CONFIG.endpoints.upload 
+        : `${baseUrl}${API_CONFIG.endpoints.upload}`;
+      
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
