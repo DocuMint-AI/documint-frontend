@@ -334,7 +334,14 @@ export const processDocument = async (documentId: string): Promise<ProcessDocume
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.processDocument}`, {
+      // Use relative URL in production or when baseURL is empty
+      const baseUrl = API_CONFIG.baseUrl;
+      const isProduction = process.env.NODE_ENV === 'production';
+      const processUrl = (isProduction || !baseUrl || baseUrl === '') 
+        ? API_CONFIG.endpoints.processDocument 
+        : `${baseUrl}${API_CONFIG.endpoints.processDocument}`;
+      
+      const response = await fetch(processUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -442,7 +449,14 @@ export const askQuestion = async (documentId: string, question: string): Promise
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.qa}`, {
+      // Use relative URL in production or when baseURL is empty
+      const baseUrl = API_CONFIG.baseUrl;
+      const isProduction = process.env.NODE_ENV === 'production';
+      const qaUrl = (isProduction || !baseUrl || baseUrl === '') 
+        ? API_CONFIG.endpoints.qa 
+        : `${baseUrl}${API_CONFIG.endpoints.qa}`;
+      
+      const response = await fetch(qaUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -519,7 +533,14 @@ export const getDocumentText = async (documentId: string): Promise<DocumentTextR
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.documentText}/${documentId}`, {
+      // Use relative URL in production or when baseURL is empty
+      const baseUrl = API_CONFIG.baseUrl;
+      const isProduction = process.env.NODE_ENV === 'production';
+      const textUrl = (isProduction || !baseUrl || baseUrl === '') 
+        ? `${API_CONFIG.endpoints.documentText}/${documentId}` 
+        : `${baseUrl}${API_CONFIG.endpoints.documentText}/${documentId}`;
+      
+      const response = await fetch(textUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,

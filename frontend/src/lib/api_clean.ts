@@ -209,7 +209,14 @@ export const uploadDocument = async (file: File): Promise<UploadResponse> => {
     formData.append('file', file);
     
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.upload}`, {
+      // Use relative URL in production or when baseURL is empty
+      const baseUrl = API_CONFIG.baseUrl;
+      const isProduction = process.env.NODE_ENV === 'production';
+      const uploadUrl = (isProduction || !baseUrl || baseUrl === '') 
+        ? API_CONFIG.endpoints.upload 
+        : `${baseUrl}${API_CONFIG.endpoints.upload}`;
+      
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
       });
@@ -265,7 +272,14 @@ export const processDocument = async (documentId: string): Promise<ProcessDocume
   } else {
     // Real API call
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.processDocument}`, {
+      // Use relative URL in production or when baseURL is empty
+      const baseUrl = API_CONFIG.baseUrl;
+      const isProduction = process.env.NODE_ENV === 'production';
+      const processUrl = (isProduction || !baseUrl || baseUrl === '') 
+        ? API_CONFIG.endpoints.processDocument 
+        : `${baseUrl}${API_CONFIG.endpoints.processDocument}`;
+      
+      const response = await fetch(processUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -339,7 +353,14 @@ export const askQuestion = async (documentId: string, question: string): Promise
   } else {
     // Real API call
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.qa}`, {
+      // Use relative URL in production or when baseURL is empty
+      const baseUrl = API_CONFIG.baseUrl;
+      const isProduction = process.env.NODE_ENV === 'production';
+      const qaUrl = (isProduction || !baseUrl || baseUrl === '') 
+        ? API_CONFIG.endpoints.qa 
+        : `${baseUrl}${API_CONFIG.endpoints.qa}`;
+      
+      const response = await fetch(qaUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

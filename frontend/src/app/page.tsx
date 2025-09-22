@@ -122,7 +122,7 @@ export default function HomePage() {
               Analyze Your First Document
             </button>
             <button
-              onClick={() => router.push('/workspace')}
+              onClick={() => window.open('https://drive.google.com/file/d/1UKsoER7ctnFBYUz94O5X_XbtBKEIyL4i/view?usp=sharing', '_blank')}
               className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-xl text-lg font-semibold transition-all duration-200 backdrop-blur-sm border border-white/20 hover:border-white/30"
             >
               View Demo
