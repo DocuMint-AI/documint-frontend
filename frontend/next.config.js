@@ -27,8 +27,9 @@ const nextConfig = {
       return [];
     }
     
-    // For production/container deployment, proxy to internal backend on port 8000
-    const targetUrl = 'http://localhost:8000';
+    // For production/container deployment, proxy to internal backend
+    // In Cloud Run, use the backend service URL or localhost for local development
+    const targetUrl = process.env.NEXT_PUBLIC_BACKEND_TARGET_URL || 'https://documint-ai-142203089299.asia-south1.run.app';
     console.log(`[Next.js Rewrites] Enabling rewrites to: ${targetUrl}`);
     
     return [
