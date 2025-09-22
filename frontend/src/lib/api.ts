@@ -2,28 +2,64 @@
 import { extractDocumentText, generateMockAnalysis, ExtractedDocument } from './documentExtractor';
 import { normalizeAnalysis, normalizeInsight, isValidAnalysisResponse, type NormalizedAnalysis } from './insightNormalizer';
 
-// Environment configuration
+// Environment configuration helper (following same pattern as auth.ts)
+class APIConfig {
+  private static getEnvVar(key: string, fallback?: string): string {
+    const value = process.env[key];
+    return value || fallback || '';
+  }
+
+  static get baseURL(): string {
+    return this.getEnvVar('NEXT_PUBLIC_BACKEND_BASE_URL', 'http://localhost:8000');
+  }
+
+  static buildURL(endpoint: string): string {
+    // Use baseURL if available, otherwise construct from parts
+    const base = this.baseURL;
+    
+    // If baseURL is empty, use relative URLs (for Next.js proxy)
+    if (!base || base === '' || base === 'undefined') {
+      return endpoint;
+    }
+    
+    return `${base}${endpoint}`;
+  }
+
+  static get endpoints() {
+    return {
+      // Authentication endpoints
+      register: this.getEnvVar('NEXT_PUBLIC_AUTH_REGISTER_ENDPOINT', '/register'),
+      login: this.getEnvVar('NEXT_PUBLIC_AUTH_LOGIN_ENDPOINT', '/login'),
+      logout: this.getEnvVar('NEXT_PUBLIC_AUTH_LOGOUT_ENDPOINT', '/logout'),
+      me: this.getEnvVar('NEXT_PUBLIC_AUTH_ME_ENDPOINT', '/me'),
+      
+      // Document endpoints
+      upload: this.getEnvVar('NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT', '/api/v1/upload'),
+      processDocument: this.getEnvVar('NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT', '/api/v1/process-document'),
+      qa: this.getEnvVar('NEXT_PUBLIC_BACKEND_QA_ENDPOINT', '/api/v1/qa'),
+      documents: this.getEnvVar('NEXT_PUBLIC_BACKEND_DOCUMENTS_ENDPOINT', '/api/v1/documents'),
+      documentText: this.getEnvVar('NEXT_PUBLIC_BACKEND_TEXT_ENDPOINT', '/api/v1/text'),
+      
+      // Health check
+      health: this.getEnvVar('NEXT_PUBLIC_BACKEND_HEALTH_ENDPOINT', '/health'),
+    };
+  }
+
+  static get maxFileSize(): number {
+    return parseInt(this.getEnvVar('NEXT_PUBLIC_MAX_FILE_SIZE', '10485760')); // 10MB default
+  }
+
+  static get supportedFormats(): string[] {
+    return this.getEnvVar('NEXT_PUBLIC_SUPPORTED_FORMATS', '.pdf,.doc,.docx').split(',');
+  }
+}
+
+// Legacy API_CONFIG for backward compatibility
 const API_CONFIG = {
-  baseUrl: process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000',
-  endpoints: {
-    // Authentication endpoints
-    register: process.env.NEXT_PUBLIC_AUTH_REGISTER_ENDPOINT || '/register',
-    login: process.env.NEXT_PUBLIC_AUTH_LOGIN_ENDPOINT || '/login',
-    logout: process.env.NEXT_PUBLIC_AUTH_LOGOUT_ENDPOINT || '/logout',
-    me: process.env.NEXT_PUBLIC_AUTH_ME_ENDPOINT || '/me',
-    
-    // Document endpoints
-    upload: process.env.NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT || '/api/v1/upload',
-    processDocument: process.env.NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT || '/api/v1/process-document',
-    qa: process.env.NEXT_PUBLIC_BACKEND_QA_ENDPOINT || '/api/v1/qa',
-    documents: process.env.NEXT_PUBLIC_BACKEND_DOCUMENTS_ENDPOINT || '/api/v1/documents',
-    documentText: process.env.NEXT_PUBLIC_BACKEND_TEXT_ENDPOINT || '/api/v1/text',
-    
-    // Health check
-    health: process.env.NEXT_PUBLIC_BACKEND_HEALTH_ENDPOINT || '/health',
-  },
-  maxFileSize: parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '10485760'), // 10MB default
-  supportedFormats: process.env.NEXT_PUBLIC_SUPPORTED_FORMATS?.split(',') || ['.pdf', '.doc', '.docx'],
+  get baseUrl() { return APIConfig.baseURL; },
+  get endpoints() { return APIConfig.endpoints; },
+  get maxFileSize() { return APIConfig.maxFileSize; },
+  get supportedFormats() { return APIConfig.supportedFormats; },
 };
 
 export interface UploadResponse {
@@ -68,8 +104,7 @@ export interface DocumentTextResponse {
 // API health check function
 async function checkApiHealth(): Promise<boolean> {
   try {
-    const baseUrl = API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : '';
-    const healthUrl = baseUrl ? `${baseUrl}${API_CONFIG.endpoints.health}` : API_CONFIG.endpoints.health;
+    const healthUrl = APIConfig.buildURL(API_CONFIG.endpoints.health);
     
     console.log('Checking health at:', healthUrl);
     const response = await fetch(healthUrl, {
@@ -249,7 +284,7 @@ export const uploadDocument = async (file: File): Promise<UploadResponse> => {
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.upload}`, {
+      const response = await fetch(APIConfig.buildURL(API_CONFIG.endpoints.upload), {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -327,7 +362,7 @@ export const processDocument = async (documentId: string): Promise<ProcessDocume
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.processDocument}`, {
+      const response = await fetch(APIConfig.buildURL(API_CONFIG.endpoints.processDocument), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -435,7 +470,7 @@ export const askQuestion = async (documentId: string, question: string): Promise
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.qa}`, {
+      const response = await fetch(APIConfig.buildURL(API_CONFIG.endpoints.qa), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -512,7 +547,7 @@ export const getDocumentText = async (documentId: string): Promise<DocumentTextR
         throw new Error('No authentication token found');
       }
       
-      const response = await fetch(`${API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : ''}${API_CONFIG.endpoints.documentText}/${documentId}`, {
+      const response = await fetch(APIConfig.buildURL(`${API_CONFIG.endpoints.documentText}/${documentId}`), {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,

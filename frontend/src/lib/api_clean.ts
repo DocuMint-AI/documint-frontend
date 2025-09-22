@@ -1,16 +1,52 @@
 // API configuration and utilities for DocuMint AI
 import { extractDocumentText, generateMockAnalysis, ExtractedDocument } from './documentExtractor';
 
-// Environment configuration
+// Environment configuration helper (following same pattern as auth.ts)
+class APIConfig {
+  private static getEnvVar(key: string, fallback?: string): string {
+    const value = process.env[key];
+    return value || fallback || '';
+  }
+
+  static get baseURL(): string {
+    return this.getEnvVar('NEXT_PUBLIC_BACKEND_BASE_URL', 'http://localhost:8000');
+  }
+
+  static buildURL(endpoint: string): string {
+    // Use baseURL if available, otherwise construct from parts
+    const base = this.baseURL;
+    
+    // If baseURL is empty, use relative URLs (for Next.js proxy)
+    if (!base || base === '' || base === 'undefined') {
+      return endpoint;
+    }
+    
+    return `${base}${endpoint}`;
+  }
+
+  static get endpoints() {
+    return {
+      upload: this.getEnvVar('NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT', '/api/v1/upload'),
+      processDocument: this.getEnvVar('NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT', '/api/v1/process-document'),
+      qa: this.getEnvVar('NEXT_PUBLIC_BACKEND_QA_ENDPOINT', '/api/v1/qa'),
+    };
+  }
+
+  static get maxFileSize(): number {
+    return parseInt(this.getEnvVar('NEXT_PUBLIC_MAX_FILE_SIZE', '10485760')); // 10MB default
+  }
+
+  static get supportedFormats(): string[] {
+    return this.getEnvVar('NEXT_PUBLIC_SUPPORTED_FORMATS', '.pdf,.doc,.docx').split(',');
+  }
+}
+
+// Legacy API_CONFIG for backward compatibility
 const API_CONFIG = {
-  baseUrl: process.env.NEXT_PUBLIC_BACKEND_BASE_URL || 'http://localhost:8000',
-  endpoints: {
-    upload: process.env.NEXT_PUBLIC_BACKEND_UPLOAD_ENDPOINT || '/api/v1/upload',
-    processDocument: process.env.NEXT_PUBLIC_BACKEND_PROCESS_ENDPOINT || '/api/v1/process-document',
-    qa: process.env.NEXT_PUBLIC_BACKEND_QA_ENDPOINT || '/api/v1/qa',
-  },
-  maxFileSize: parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '10485760'), // 10MB default
-  supportedFormats: process.env.NEXT_PUBLIC_SUPPORTED_FORMATS?.split(',') || ['.pdf', '.doc', '.docx'],
+  get baseUrl() { return APIConfig.baseURL; },
+  get endpoints() { return APIConfig.endpoints; },
+  get maxFileSize() { return APIConfig.maxFileSize; },
+  get supportedFormats() { return APIConfig.supportedFormats; },
 };
 
 export interface UploadResponse {
@@ -51,8 +87,7 @@ export interface QAResponse {
 // API health check function
 async function checkApiHealth(): Promise<boolean> {
   try {
-    const baseUrl = API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : '';
-    const healthUrl = baseUrl ? `${baseUrl}/health` : '/health';
+    const healthUrl = APIConfig.buildURL('/health');
     
     const response = await fetch(healthUrl, {
       method: 'GET',
@@ -209,7 +244,7 @@ export const uploadDocument = async (file: File): Promise<UploadResponse> => {
     formData.append('file', file);
     
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.upload}`, {
+      const response = await fetch(APIConfig.buildURL(API_CONFIG.endpoints.upload), {
         method: 'POST',
         body: formData,
       });
@@ -265,7 +300,7 @@ export const processDocument = async (documentId: string): Promise<ProcessDocume
   } else {
     // Real API call
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.processDocument}`, {
+      const response = await fetch(APIConfig.buildURL(API_CONFIG.endpoints.processDocument), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -339,7 +374,7 @@ export const askQuestion = async (documentId: string, question: string): Promise
   } else {
     // Real API call
     try {
-      const response = await fetch(`${API_CONFIG.baseUrl}${API_CONFIG.endpoints.qa}`, {
+      const response = await fetch(APIConfig.buildURL(API_CONFIG.endpoints.qa), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
