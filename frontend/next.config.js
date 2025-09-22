@@ -27,9 +27,8 @@ const nextConfig = {
       return [];
     }
     
-    // For production/container deployment, proxy to internal backend
-    // Since frontend and backend are on the same server, use localhost
-    const targetUrl = process.env.NEXT_PUBLIC_BACKEND_TARGET_URL || 'http://localhost:8000';
+    // For production/container deployment, proxy to internal backend on port 8000
+    const targetUrl = 'http://localhost:8000';
     console.log(`[Next.js Rewrites] Enabling rewrites to: ${targetUrl}`);
     
     return [
