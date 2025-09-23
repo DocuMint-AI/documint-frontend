@@ -40,7 +40,7 @@ body {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: #000;
+  background-color: #ffffff;
   mix-blend-mode: difference;
   pointer-events: none;
   z-index: 999999;
@@ -48,29 +48,22 @@ body {
   transition: transform 0.1s ease-out, width 0.2s ease-out, height 0.2s ease-out, border-radius 0.2s ease-out;
   will-change: transform;
   opacity: 1;
-  isolation: isolate;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Dark theme adjustments */
-.dark .custom-cursor {
-  background-color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .custom-cursor.hover {
   width: 32px;
   height: 32px;
-  background-color: #fff;
-  opacity: 1;
-  border: 2px solid rgba(0, 0, 0, 0.3);
+  background-color: #ffffff;
   mix-blend-mode: difference;
+  opacity: 1;
 }
 
-.dark .custom-cursor.hover {
-  background-color: #000;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+.custom-cursor.heading {
+  width: 40px;
+  height: 40px;
+  background-color: #ffffff;
   mix-blend-mode: difference;
+  opacity: 1;
 }
 
 .custom-cursor.click {
@@ -83,13 +76,9 @@ body {
   width: 3px;
   height: 24px;
   border-radius: 1px;
-  background-color: #000;
+  background-color: #ffffff;
+  mix-blend-mode: difference;
   opacity: 1;
-  border: none;
-}
-
-.dark .custom-cursor.text {
-  background-color: #fff;
 }
 
 /* Ensure text inputs show appropriate cursor */
@@ -135,6 +124,178 @@ html {
 .stars-bg {
   position: relative;
   overflow: hidden;
+}
+
+/* Custom blob animations for workspace */
+@keyframes float-blob-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  25% {
+    transform: translate(80px, -60px) scale(1.3);
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
+  50% {
+    transform: translate(-70px, 90px) scale(0.7);
+    border-radius: 40% 60% 60% 40% / 70% 30% 60% 30%;
+  }
+  75% {
+    transform: translate(-90px, -50px) scale(1.2);
+    border-radius: 60% 40% 30% 70% / 40% 70% 30% 60%;
+  }
+}
+
+@keyframes float-blob-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    border-radius: 40% 60% 70% 30% / 40% 60% 30% 70%;
+  }
+  33% {
+    transform: translate(-85px, 75px) scale(1.4);
+    border-radius: 70% 30% 40% 60% / 30% 40% 60% 70%;
+  }
+  66% {
+    transform: translate(65px, -80px) scale(0.6);
+    border-radius: 30% 70% 60% 40% / 60% 30% 40% 70%;
+  }
+}
+
+@keyframes float-blob-3 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+  }
+  20% {
+    transform: translate(-50%, -50%) translate(60px, -70px) scale(1.5);
+    border-radius: 60% 40% 40% 60% / 70% 30% 60% 40%;
+  }
+  40% {
+    transform: translate(-50%, -50%) translate(-50px, 85px) scale(0.5);
+    border-radius: 40% 60% 30% 70% / 40% 60% 70% 30%;
+  }
+  60% {
+    transform: translate(-50%, -50%) translate(75px, 40px) scale(1.3);
+    border-radius: 70% 30% 60% 40% / 30% 70% 40% 60%;
+  }
+  80% {
+    transform: translate(-50%, -50%) translate(-80px, -60px) scale(0.8);
+    border-radius: 30% 70% 70% 30% / 60% 40% 30% 70%;
+  }
+}
+
+@keyframes float-blob-fast {
+  0%, 100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  25% {
+    transform: translate(100px, -80px) scale(1.2) rotate(90deg);
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
+  50% {
+    transform: translate(-90px, 100px) scale(0.8) rotate(180deg);
+    border-radius: 40% 60% 60% 40% / 70% 30% 60% 30%;
+  }
+  75% {
+    transform: translate(-110px, -70px) scale(1.4) rotate(270deg);
+    border-radius: 60% 40% 30% 70% / 40% 70% 30% 60%;
+  }
+}
+
+.animate-float-blob-1 {
+  animation: float-blob-1 6s ease-in-out infinite;
+}
+
+.animate-float-blob-2 {
+  animation: float-blob-2 7s ease-in-out infinite;
+}
+
+.animate-float-blob-3 {
+  animation: float-blob-3 8s ease-in-out infinite;
+}
+
+.animate-float-blob-fast {
+  animation: float-blob-fast 5s ease-in-out infinite;
+}
+
+/* Scroll-triggered animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-on-scroll {
+  opacity: 0;
+  transition: all 0.6s ease-out;
+}
+
+.animate-on-scroll.animate-slide-in-up {
+  animation: slideInUp 0.6s ease-out forwards;
+}
+
+.animate-on-scroll.animate-slide-in-left {
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+
+.animate-on-scroll.animate-slide-in-right {
+  animation: slideInRight 0.6s ease-out forwards;
+}
+
+.animate-on-scroll.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-on-scroll.animate-scale-in {
+  animation: scaleIn 0.6s ease-out forwards;
 }
 
 .stars-bg::before {

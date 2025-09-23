@@ -114,9 +114,17 @@ export default function AuthPage() {
             router.push('/upload');
           }, 2000);
         } else {
+          // Check if the error suggests user doesn't exist
+          let errorMessage = response.error || 'Login failed';
+          if (errorMessage.toLowerCase().includes('incorrect username') || 
+              errorMessage.toLowerCase().includes('username or password') ||
+              errorMessage.toLowerCase().includes('user not found')) {
+            errorMessage = 'Username not found. Please check your username or create a new account.';
+          }
+          
           setMessage({
             type: 'error',
-            text: response.error || 'Login failed'
+            text: errorMessage
           });
           // Reset CAPTCHA on login failure
           setCaptchaToken('');

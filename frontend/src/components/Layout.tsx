@@ -7,13 +7,14 @@ import ThemeToggle from './ThemeToggle';
 import ProfileDropdown from './ProfileDropdown';
 import ApiInitializer from './ApiInitializer';
 import { SessionManager } from '@/lib/auth';
-import { FileText, Upload, Settings, Brain, Menu, X } from 'lucide-react';
+import { FileText, Upload, Settings, Brain, Menu, X, BookOpen } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
+  hideThemeToggle?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, hideThemeToggle = false }) => {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -58,6 +59,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigation = [
     { name: 'Upload', href: '/upload', icon: Upload },
     { name: 'Workspace', href: '/workspace', icon: Brain },
+    { name: 'Docs', href: '/docs', icon: BookOpen },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
@@ -74,11 +76,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex justify-between items-center h-14 md:h-16">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 md:gap-3" onClick={closeMobileMenu}>
-              <div className="p-1 md:p-1.5 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                <FileText className="w-5 md:w-6 h-5 md:h-6 text-blue-600 dark:text-blue-400" />
+              <div className="bg-blue-100 dark:bg-blue-900 overflow-hidden">
+                <img 
+                  src="/assets/documint-square-zoomed.png" 
+                  alt="DocuMint AI" 
+                  className="w-10 md:w-11 h-10 md:h-11"
+                />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white leading-tight">
+                <span className="text-lg md:text-xl font-medium text-gray-900 dark:text-white leading-tight" style={{fontFamily: "'TT Drugs Trial', sans-serif"}}>
                   {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block leading-tight">
@@ -110,14 +116,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               })}
               
               <div className="ml-2 pl-2 border-l border-gray-200 dark:border-gray-800 flex items-center gap-2">
-                <ThemeToggle />
+                {!hideThemeToggle && <ThemeToggle />}
                 {isAuthenticated && <ProfileDropdown />}
               </div>
             </nav>
 
             {/* Mobile menu button */}
             <div className="flex items-center gap-2 md:hidden">
-              <ThemeToggle />
+              {!hideThemeToggle && <ThemeToggle />}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"

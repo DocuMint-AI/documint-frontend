@@ -1,10 +1,13 @@
 import '../styles/globals.css'
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Barlow } from 'next/font/google'
 import { ThemeProvider } from '@/context/ThemeContext'
 import CustomCursor from '@/components/CustomCursor'
 
-const inter = Inter({ subsets: ['latin'] })
+const barlow = Barlow({ 
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700']
+})
 
 export const metadata: Metadata = {
   title: `${process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'} - Legal Document Analysis`,
@@ -19,6 +22,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Custom Font - TT Drugs Trial */}
+        <link href="https://fonts.cdnfonts.com/css/tt-drugs-trial" rel="stylesheet" />
+        
         {/* Google Tag Manager */}
         <script
           dangerouslySetInnerHTML={{
@@ -44,7 +50,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} transition-all duration-700 ease-in-out`}>
+      <body className={`${barlow.className} transition-all duration-700 ease-in-out`}>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import PageLoader from '@/components/PageLoader';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -22,6 +23,7 @@ interface Panel {
 }
 
 export default function WorkspacePage() {
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Panel state management
@@ -299,26 +301,24 @@ export default function WorkspacePage() {
     );
   }
 
-  // Show upload message if no document
+  // Show upload message if no document - automatically redirect to upload
   if (!currentDocument) {
+    // Auto-redirect to upload page
+    useEffect(() => {
+      router.push('/upload');
+    }, [router]);
+    
     return (
       <Layout>
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto px-4">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
-              No Document Loaded
+              Redirecting to Upload
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Upload a document to start analyzing with AI-powered insights.
+              No document found. Redirecting you to upload a document...
             </p>
-            <a
-              href="/upload"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <FileText className="w-4 h-4" />
-              Upload Document
-            </a>
           </div>
         </div>
       </Layout>
@@ -328,9 +328,15 @@ export default function WorkspacePage() {
   return (
     <AuthGuard>
       <Layout>
-      <div className="h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-gray-50 dark:bg-black font-sans flex flex-col overflow-hidden stars-bg">
+      <div className="h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-gray-50 dark:bg-black font-sans flex flex-col overflow-hidden relative">
+        {/* Neon halo background effect */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 dark:bg-blue-500/10 blur-3xl animate-float-blob-1"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/5 dark:bg-purple-500/10 blur-3xl animate-float-blob-2"></div>
+          <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-indigo-500/5 dark:bg-indigo-500/10 blur-2xl animate-float-blob-3"></div>
+        </div>
         {/* Header */}
-        <div className="flex-shrink-0 p-2 md:p-4 bg-gray-100/20 dark:bg-gray-800/20 border-b border-gray-200/30 dark:border-gray-700/30 shadow-sm">
+        <div className="flex-shrink-0 p-2 md:p-4 bg-gray-100/20 dark:bg-gray-800/20 border-b border-gray-200/30 dark:border-gray-700/30 shadow-sm relative z-10">
           <div className="min-w-0 ml-0 md:ml-2">
             <h1 className="text-sm md:text-xl font-bold text-gray-900 dark:text-white mb-1 truncate">
               Document Analysis Workspace

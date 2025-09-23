@@ -68,13 +68,13 @@ export interface DocumentTextResponse {
 // API health check function
 async function checkApiHealth(): Promise<boolean> {
   try {
-    const baseUrl = API_CONFIG.baseUrl && API_CONFIG.baseUrl !== '' ? API_CONFIG.baseUrl : '';
-    const healthUrl = baseUrl ? `${baseUrl}${API_CONFIG.endpoints.health}` : API_CONFIG.endpoints.health;
+    // Use relative URL to leverage Next.js rewrites
+    const healthUrl = API_CONFIG.endpoints.health;
     
     console.log('Checking health at:', healthUrl);
     const response = await fetch(healthUrl, {
       method: 'GET',
-      signal: AbortSignal.timeout(5000), // 5 second timeout
+      signal: AbortSignal.timeout(10000), // 10 second timeout for Cloud Run
     });
     console.log('Health check response status:', response.status, response.ok);
     return response.ok;

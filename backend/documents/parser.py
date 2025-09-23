@@ -70,7 +70,7 @@ class DocumentParser:
             return text_content.strip(), metadata
             
         except Exception as e:
-            raise DocumentError(f"Error parsing PDF: {str(e)}")
+            raise DocumentError(f"Error parsing PDF: {str(e)}", "PDF_PARSE_ERROR")
     
     @staticmethod
     def extract_docx_text(file_path: str) -> Tuple[str, Dict[str, Any]]:
@@ -99,7 +99,7 @@ class DocumentParser:
             return text_content.strip(), metadata
             
         except Exception as e:
-            raise DocumentError(f"Error parsing DOCX: {str(e)}")
+            raise DocumentError(f"Error parsing DOCX: {str(e)}", "DOCX_PARSE_ERROR")
     
     @staticmethod
     def extract_doc_text(file_path: str) -> Tuple[str, Dict[str, Any]]:
@@ -171,7 +171,7 @@ class DocumentParser:
             }
             needs_ocr = True
         else:
-            raise DocumentError(f"Unsupported file format: {extension}")
+            raise DocumentError(f"Unsupported file format: {extension}", "UNSUPPORTED_FILE_FORMAT")
         
         # Add common metadata
         metadata.update({

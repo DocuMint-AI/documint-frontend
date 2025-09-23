@@ -23,14 +23,14 @@ class DynamicGeminiClient:
     def __init__(self):
         """Initialize Gemini client"""
         if not config.GEMINI_API_KEY:
-            raise AIServiceError("Gemini API key not configured")
+            raise AIServiceError("Gemini API key not configured", "GEMINI_API_KEY_MISSING")
         
         try:
             genai.configure(api_key=config.GEMINI_API_KEY)
             self.model = genai.GenerativeModel('gemini-1.5-flash')
             self.parser = InsightTextParser()
         except Exception as e:
-            raise AIServiceError(f"Failed to initialize Gemini client: {str(e)}")
+            raise AIServiceError(f"Failed to initialize Gemini client: {str(e)}", "GEMINI_INIT_ERROR")
 
     async def analyze_document_dynamic(self, doc_id: str, document_text: str) -> Dict[str, Any]:
         """
@@ -96,7 +96,7 @@ class DynamicGeminiClient:
             
         except Exception as e:
             print(f"DEBUG: Dynamic analysis failed: {str(e)}")
-            raise AIServiceError(f"Error in dynamic document analysis: {str(e)}")
+            raise AIServiceError(f"Error in dynamic document analysis: {str(e)}", "GEMINI_ANALYSIS_ERROR")
 
     async def _detect_document_type(self, document_text: str) -> Dict[str, str]:
         """Step 1: Detect document type"""

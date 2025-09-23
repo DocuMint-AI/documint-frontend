@@ -162,7 +162,7 @@ class InsightTextParser:
         return ParsedInsight(
             type=insight_type,
             intensity=intensity,
-            description=description,
+            description=self._clean_description(description),
             recommendation=recommendation,
             confidence=0.8
         )
@@ -200,9 +200,7 @@ class InsightTextParser:
         intensity = self._infer_intensity(text)
         
         # Clean up description
-        description = text.strip()
-        if description.endswith('.'):
-            description = description[:-1]
+        description = self._clean_description(text)
         
         # Generate basic recommendation
         recommendation = self._generate_recommendation(insight_type, description)
@@ -214,6 +212,24 @@ class InsightTextParser:
             recommendation=recommendation,
             confidence=0.7
         )
+
+    def _clean_description(self, text: str) -> str:
+        """Clean up description text by removing unwanted prefixes and formatting"""
+        description = text.strip()
+        
+        # Remove ** markdown bold formatting from the beginning
+        if description.startswith('**'):
+            description = description[2:].strip()
+        
+        # Remove trailing period if present
+        if description.endswith('.'):
+            description = description[:-1]
+        
+        # Remove any remaining ** at the start of the text after whitespace
+        while description.startswith('*'):
+            description = description[1:].strip()
+        
+        return description
 
     def _infer_type(self, text: str, default_type: str) -> str:
         """Infer insight type from text content"""
@@ -281,4 +297,6 @@ class InsightTextParser:
                 content_lines.append(line)
         
         main_content = ' '.join(content_lines)
+        # Clean the main content as well
+        main_content = self._clean_description(main_content)
         return main_content[:200] + "..." if len(main_content) > 200 else main_content
