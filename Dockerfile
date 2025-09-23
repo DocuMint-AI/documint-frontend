@@ -1,5 +1,5 @@
 # Multi-stage optimized Dockerfile for Documint AI
-# Fixes build issues and reduces image size
+# FastAPI backend + Next.js frontend in one container
 
 # ----------------------------
 # Frontend Build Stage
@@ -13,49 +13,37 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /app
 
 # Copy package files first for better caching
 COPY frontend/package*.json ./
 
-# Clean npm cache and install dependencies
-RUN npm cache clean --force && \
-    npm ci --no-audit --no-fund
+# Install dependencies
+RUN npm ci --no-audit --no-fund
 
-# Copy source files (order matters for caching)
-COPY frontend/next.config.js ./
-COPY frontend/tsconfig.json ./
-COPY frontend/postcss.config.js ./
-COPY frontend/tailwind.config.ts ./
-COPY frontend/next-env.d.ts ./
-COPY frontend/public/ ./public/
-COPY frontend/src/ ./src/
+# Copy source files
+COPY frontend/ ./
 
-# Build the application
-RUN npm run build
-
-# Remove dev dependencies and keep only production files
-RUN npm prune --production
+# Build Next.js app (with standalone output for production)
+RUN npm run build && npm prune --production
 
 # ----------------------------
 # Backend Dependencies Stage
 # ----------------------------
 FROM python:3.11-slim AS backend-deps
 
-# Install system dependencies for Python packages
+ENV PYTHONUNBUFFERED=1
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install uv for faster package management
+# Install uv for faster pip installs
 RUN pip install --no-cache-dir uv
 
-# Set working directory
 WORKDIR /app
 
-# Copy requirements and install dependencies
 COPY backend/requirements.txt ./
 RUN uv pip install --system --no-cache-dir -r requirements.txt
 
@@ -64,7 +52,10 @@ RUN uv pip install --system --no-cache-dir -r requirements.txt
 # ----------------------------
 FROM python:3.11-slim AS production
 
-# Install runtime dependencies
+ENV PYTHONUNBUFFERED=1 \
+    PATH="/home/app/.local/bin:$PATH"
+
+# Install Node.js runtime (for serving Next.js)
 RUN apt-get update && apt-get install -y \
     curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
@@ -72,21 +63,20 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && npm install -g npm@latest
 
-# Create app user for security
+# Create app user
 RUN useradd --create-home --shell /bin/bash --uid 1000 app
 
-# Set working directory
 WORKDIR /app
 
-# Copy Python dependencies from deps stage
+# Copy backend deps
 COPY --from=backend-deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=backend-deps /usr/local/bin /usr/local/bin
 
-# Copy only production frontend build
+# Copy frontend build output
 COPY --from=frontend-builder /app/.next ./frontend/.next
 COPY --from=frontend-builder /app/public ./frontend/public
-COPY --from=frontend-builder /app/package*.json ./frontend/
 COPY --from=frontend-builder /app/node_modules ./frontend/node_modules
+COPY --from=frontend-builder /app/package*.json ./frontend/
 COPY --from=frontend-builder /app/next.config.js ./frontend/
 
 # Copy backend source
@@ -95,27 +85,23 @@ COPY backend/ ./backend/
 # Copy startup scripts
 COPY scripts/ ./scripts/
 
-# Create necessary directories with correct permissions
+# Create required dirs
 RUN mkdir -p \
     /var/log/documint \
     /app/backend/data/system \
     /app/backend/.cheetah \
-    && touch /app/backend/data/system/users.json \
     && echo '{}' > /app/backend/data/system/users.json
 
-# Set ownership and permissions
-RUN chown -R app:app /app \
-    && chown -R app:app /var/log/documint \
-    && chmod +x /app/scripts/*.sh \
-    && chmod 755 /app/backend/data \
-    && chmod 644 /app/backend/data/system/users.json
+# Set permissions
+RUN chown -R app:app /app /var/log/documint && \
+    chmod +x /app/scripts/*.sh
 
-# Expose port
+USER app
+
 EXPOSE 8080
 
-# Health check
+# Health check (FastAPI must have /health endpoint)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:8080/health || exit 1
 
-# Start app via start script
 CMD ["/app/scripts/start.sh"]
