@@ -30,6 +30,19 @@ export default function RootLayout({
           }}
         />
         {/* End Google Tag Manager */}
+        
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-QGV0RX7BTS"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-QGV0RX7BTS');
+            `,
+          }}
+        />
       </head>
       <body className={`${inter.className} transition-all duration-700 ease-in-out`}>
         {/* Google Tag Manager (noscript) */}
