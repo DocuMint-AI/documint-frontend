@@ -55,7 +55,7 @@ class BackendConfig {
   }
 
   static get baseURL(): string {
-    return this.getEnvVar('NEXT_PUBLIC_BACKEND_BASE_URL', 'http://localhost:8000');
+    return this.getEnvVar('NEXT_PUBLIC_BACKEND_BASE_URL', '');
   }
 
   static get protocol(): string {
@@ -71,15 +71,17 @@ class BackendConfig {
   }
 
   static buildURL(endpoint: string): string {
-    // Use baseURL if available, otherwise construct from parts
-    const base = this.baseURL || `${this.protocol}://${this.host}:${this.port}`;
+    // Get baseURL directly
+    const base = this.baseURL;
     
     // If baseURL is empty, use relative URLs (for Next.js proxy)
     if (!base || base === '' || base === 'undefined') {
       return endpoint;
     }
     
-    return `${base}${endpoint}`;
+    // Use baseURL if available, otherwise construct from parts
+    const fullBase = base || `${this.protocol}://${this.host}:${this.port}`;
+    return `${fullBase}${endpoint}`;
   }
 
   // Endpoint getters
