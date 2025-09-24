@@ -27,8 +27,10 @@ const nextConfig = {
       return [];
     }
     
-    // For production/container deployment, proxy to internal backend on port 8000
-    const targetUrl = 'http://localhost:8000';
+    // For production/container deployment, proxy to internal backend
+    // Use environment variable or fallback to default port
+    const backendPort = process.env.BACKEND_PORT || process.env.NEXT_PUBLIC_BACKEND_PORT || '8000';
+    const targetUrl = `http://localhost:${backendPort}`;
     console.log(`[Next.js Rewrites] Enabling rewrites to: ${targetUrl}`);
     
   const rules = [

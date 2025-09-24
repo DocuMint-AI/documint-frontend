@@ -12,6 +12,17 @@ const barlow = Barlow({
 export const metadata: Metadata = {
   title: `${process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'} - Legal Document Analysis`,
   description: 'AI-powered legal document analysis and insights platform',
+  icons: {
+    icon: [
+      {
+        url: '/assets/documint-square-zoomed-white.ico',
+        sizes: 'any',
+        type: 'image/x-icon',
+      },
+    ],
+    shortcut: '/assets/documint-square-zoomed-white.ico',
+    apple: '/assets/documint-square-zoomed-white.ico',
+  },
 }
 
 export default function RootLayout({
