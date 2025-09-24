@@ -3,6 +3,7 @@ Document handling routes for upload, processing, and AI analysis
 """
 
 import os
+import logging
 import tempfile
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, status, Request
 from pydantic import BaseModel
@@ -41,6 +42,7 @@ class DocumentUploadResponse(BaseModel):
 
 
 documents_router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @documents_router.post("/upload", response_model=DocumentUploadResponse)
@@ -148,6 +150,26 @@ async def upload_document(
             # Clean up temporary file
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
+    except FileValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except AuthenticationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except DocumentError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error uploading document: {str(e)}"
+        )
 
 
 @documents_router.post("/process-document")
@@ -187,6 +209,26 @@ async def process_document(
         DocumentStorage.save_analysis_results(user_id, session_uid, analysis_result)
         
         return success_response(analysis_result, "Document analysis completed")
+    except AuthenticationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except DocumentError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except AIServiceError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error processing document: {str(e)}"
+        )
 
 
 @documents_router.post("/qa")
@@ -225,6 +267,26 @@ async def document_qa(
         )
         
         return success_response(qa_result, "Question answered successfully")
+    except AuthenticationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except DocumentError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except AIServiceError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error answering question: {str(e)}"
+        )
 
 
 @documents_router.get("/documents")

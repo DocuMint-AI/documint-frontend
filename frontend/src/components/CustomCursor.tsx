@@ -9,6 +9,7 @@ export default function CustomCursor() {
   const [isClicking, setIsClicking] = useState(false)
   const [isTextCursor, setIsTextCursor] = useState(false)
   const [isHeadingHover, setIsHeadingHover] = useState(false)
+  const [isLogoHover, setIsLogoHover] = useState(false)
 
   useEffect(() => {
     const updatePosition = (e: MouseEvent) => {
@@ -37,6 +38,19 @@ export default function CustomCursor() {
         setIsTextCursor(true)
         setIsHovering(false)
         setIsHeadingHover(false)
+        setIsLogoHover(false)
+        return
+      }
+      
+      // Check for logo elements (with data-cursor-logo attribute)
+      if (
+        target.hasAttribute('data-cursor-logo') ||
+        target.closest('[data-cursor-logo]')
+      ) {
+        setIsLogoHover(true)
+        setIsHovering(false)
+        setIsHeadingHover(false)
+        setIsTextCursor(false)
         return
       }
       
@@ -58,6 +72,7 @@ export default function CustomCursor() {
         setIsHeadingHover(true)
         setIsHovering(false)
         setIsTextCursor(false)
+        setIsLogoHover(false)
         return
       }
       
@@ -76,10 +91,12 @@ export default function CustomCursor() {
         setIsHovering(true)
         setIsTextCursor(false)
         setIsHeadingHover(false)
+        setIsLogoHover(false)
       } else {
         setIsHovering(false)
         setIsTextCursor(false)
         setIsHeadingHover(false)
+        setIsLogoHover(false)
       }
     }
 
@@ -126,7 +143,7 @@ export default function CustomCursor() {
 
   return (
     <div
-      className={`custom-cursor ${isHovering ? 'hover' : ''} ${isClicking ? 'click' : ''} ${isTextCursor ? 'text' : ''} ${isHeadingHover ? 'heading' : ''}`}
+      className={`custom-cursor ${isHovering ? 'hover' : ''} ${isClicking ? 'click' : ''} ${isTextCursor ? 'text' : ''} ${isHeadingHover || isLogoHover ? 'heading' : ''}`}
       style={{
         left: position.x,
         top: position.y,
