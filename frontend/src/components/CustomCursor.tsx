@@ -8,6 +8,7 @@ export default function CustomCursor() {
   const [isHovering, setIsHovering] = useState(false)
   const [isClicking, setIsClicking] = useState(false)
   const [isTextCursor, setIsTextCursor] = useState(false)
+  const [isLarge, setIsLarge] = useState(false)
 
   useEffect(() => {
     const updatePosition = (e: MouseEvent) => {
@@ -35,6 +36,43 @@ export default function CustomCursor() {
       ) {
         setIsTextCursor(true)
         setIsHovering(false)
+        setIsLarge(false)
+        return
+      }
+      
+      // Check for headings, logos, images, SVGs, and elements that should have large cursor
+      if (
+        target.tagName === 'H1' ||
+        target.tagName === 'H2' ||
+        target.tagName === 'H3' ||
+        target.tagName === 'H4' ||
+        target.tagName === 'H5' ||
+        target.tagName === 'H6' ||
+        target.tagName === 'IMG' ||
+        target.tagName === 'SVG' ||
+        target.closest('h1') ||
+        target.closest('h2') ||
+        target.closest('h3') ||
+        target.closest('h4') ||
+        target.closest('h5') ||
+        target.closest('h6') ||
+        target.closest('img') ||
+        target.closest('svg') ||
+        target.classList.contains('font-documint') ||
+        target.closest('.font-documint') ||
+        target.classList.contains('logo') ||
+        target.closest('.logo') ||
+        target.classList.contains('brand') ||
+        target.closest('.brand') ||
+        target.classList.contains('image') ||
+        target.closest('.image') ||
+        target.classList.contains('icon') ||
+        target.closest('.icon') ||
+        target.getAttribute('role') === 'img'
+      ) {
+        setIsLarge(true)
+        setIsHovering(false)
+        setIsTextCursor(false)
         return
       }
       
@@ -52,9 +90,11 @@ export default function CustomCursor() {
       ) {
         setIsHovering(true)
         setIsTextCursor(false)
+        setIsLarge(false)
       } else {
         setIsHovering(false)
         setIsTextCursor(false)
+        setIsLarge(false)
       }
     }
 
@@ -101,7 +141,7 @@ export default function CustomCursor() {
 
   return (
     <div
-      className={`custom-cursor ${isHovering ? 'hover' : ''} ${isClicking ? 'click' : ''} ${isTextCursor ? 'text' : ''}`}
+      className={`custom-cursor ${isHovering ? 'hover' : ''} ${isClicking ? 'click' : ''} ${isTextCursor ? 'text' : ''} ${isLarge ? 'large' : ''}`}
       style={{
         left: position.x,
         top: position.y,

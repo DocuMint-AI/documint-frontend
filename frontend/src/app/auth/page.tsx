@@ -191,9 +191,9 @@ export default function AuthPage() {
     <AuthGuard requireAuth={false}>
       <div className="min-h-screen blurry-section stars-bg bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-blue-900 flex items-center justify-center p-4">
         {/* Animated background blobs */}
-        <div className="multi-blob multi-blob-1"></div>
-        <div className="multi-blob multi-blob-2"></div>
-        <div className="multi-blob multi-blob-3"></div>
+        <div className="multi-blob multi-blob-1 bg-gradient-to-r from-blue-400/10 via-blue-500/10 to-indigo-500/10"></div>
+        <div className="multi-blob multi-blob-2 bg-gradient-to-r from-indigo-400/8 via-blue-400/8 to-cyan-400/8"></div>
+        <div className="multi-blob multi-blob-3 bg-gradient-to-r from-cyan-400/10 via-blue-500/10 to-indigo-400/10"></div>
         
         {/* Theme toggle */}
         <div className="fixed top-4 right-4 z-10">

@@ -34,8 +34,8 @@ export default function UploadPage() {
               Upload Legal Document
             </h1>
             <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto px-2 sm:px-0">
-              Get instant AI-powered insights on your legal documents. Upload contracts, 
-              agreements, and other legal documents for comprehensive analysis.
+              Get instant AI-powered insights on your legal documents. Upload PDF files 
+              for comprehensive analysis. Support for other formats is on the way.
             </p>
           </div>
 

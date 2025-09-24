@@ -41,11 +41,17 @@ export default function DocsPage() {
     <AuthGuard>
       <Layout hideThemeToggle={true}>
         <div className="min-h-screen bg-black py-6 sm:py-8 lg:py-12 relative overflow-hidden">
-          {/* Neon halo background effect */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 blur-3xl animate-float-blob-1"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 blur-3xl animate-float-blob-2"></div>
-            <div className="absolute top-1/2 left-1/2 w-72 h-72 bg-indigo-500/10 blur-2xl animate-float-blob-3"></div>
+          {/* Enhanced gradient blob background effects */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            <div className="absolute -top-20 -left-20 w-96 h-96 bg-gradient-to-r from-purple-500/25 via-pink-500/25 to-blue-500/25 rounded-full blur-3xl animate-float-blob opacity-80"></div>
+            <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-gradient-to-r from-blue-500/25 via-indigo-500/25 to-purple-500/25 rounded-full blur-3xl animate-float-blob-reverse opacity-70"></div>
+            <div className="absolute top-1/3 left-1/3 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 rounded-full blur-2xl animate-pulse-slow opacity-60"></div>
+            {/* Additional static gradient spots */}
+            <div className="absolute top-10 right-10 w-64 h-64 bg-gradient-to-r from-green-500/15 via-emerald-500/15 to-teal-500/15 rounded-full blur-2xl opacity-50"></div>
+            <div className="absolute bottom-10 left-10 w-48 h-48 bg-gradient-to-r from-orange-500/20 via-yellow-500/20 to-red-500/20 rounded-full blur-xl opacity-40"></div>
+            <div className="absolute top-1/2 right-1/4 w-56 h-56 bg-gradient-to-r from-cyan-500/15 via-blue-500/15 to-indigo-500/15 rounded-full blur-2xl opacity-45"></div>
+            <div className="absolute bottom-1/3 left-1/2 w-40 h-40 bg-gradient-to-r from-violet-500/25 via-fuchsia-500/25 to-pink-500/25 rounded-full blur-xl opacity-35"></div>
+            <div className="absolute top-3/4 right-1/3 w-32 h-32 bg-gradient-to-r from-lime-500/20 via-green-500/20 to-emerald-500/20 rounded-full blur-lg opacity-30"></div>
           </div>
 
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -389,11 +395,11 @@ export default function DocsPage() {
               <div className="mt-8 text-center">
                 <a
                   href="/upload"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 text-white rounded-xl text-lg font-semibold hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg text-base font-semibold hover:bg-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  <FileText className="w-5 h-5" />
+                  <FileText className="w-4 h-4" />
                   Start Analyzing Documents
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
             </div>

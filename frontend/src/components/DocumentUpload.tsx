@@ -16,6 +16,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [statusMessage, setStatusMessage] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [showOcrWarning, setShowOcrWarning] = useState(false);
   const router = useRouter();
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
@@ -65,8 +66,19 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
         setUploadStatus('success');
         setStatusMessage(`Successfully uploaded ${uploadResult.filename}`);
         
-        // Fetch document text from backend
-        const textResult = await getDocumentText(uploadResult.documentId);
+        // Fetch document text from backend - TEMPORARILY DISABLED
+        // const textResult = await getDocumentText(uploadResult.documentId);
+        console.log('Vision OCR backend call temporarily disabled due to bug. Document ID:', uploadResult.documentId);
+        
+        // Simulate failed text extraction to trigger OCR warning
+        const textResult = { 
+          success: false, 
+          text: '', 
+          error: 'Vision OCR temporarily disabled',
+          filename: uploadResult.filename,
+          word_count: 0,
+          page_count: 0
+        };
         
         // Start processing the document
         setIsProcessing(true);
@@ -92,11 +104,26 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
             
             // Store document text separately if available
             if (textResult.success) {
+              // Check if extracted text is empty or minimal
+              if (!textResult.text || textResult.text.trim().length < 10) {
+                setShowOcrWarning(true);
+                console.log('OCR Warning: Minimal or no text extracted from document');
+              }
               localStorage.setItem(`document_${uploadResult.documentId}`, JSON.stringify({
                 text: textResult.text,
                 filename: textResult.filename || uploadResult.filename,
                 wordCount: textResult.word_count,
                 pageCount: textResult.page_count
+              }));
+            } else {
+              setShowOcrWarning(true);
+              console.log('OCR Warning: Vision OCR backend call failed or disabled:', textResult.error || 'No text extracted');
+              // Store empty document data when OCR fails
+              localStorage.setItem(`document_${uploadResult.documentId}`, JSON.stringify({
+                text: '',
+                filename: uploadResult.filename,
+                wordCount: 0,
+                pageCount: 0
               }));
             }
             
@@ -144,6 +171,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
     setUploadedFile(null);
     setIsUploading(false);
     setIsProcessing(false);
+    setShowOcrWarning(false);
   };
 
   const getStatusIcon = () => {
@@ -169,11 +197,29 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
     if (statusMessage) {
       return statusMessage;
     }
-    return 'Upload a PDF or DOCX file to analyze';
+    return 'Upload a PDF file to analyze - other formats coming soon';
   };
 
   return (
     <div className="max-w-2xl mx-auto px-2 sm:px-0">
+      {/* OCR Warning */}
+      {showOcrWarning && (
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">
+                Vision OCR Issue Detected
+              </h3>
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                Vision OCR work is currently bugged and fix is in progress. Please upload a PDF with clear, scannable text for best results.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <div
         className={`relative border-2 border-dashed rounded-xl p-4 sm:p-6 lg:p-8 text-center min-h-[280px] sm:min-h-[320px] flex flex-col items-center justify-center transition-all duration-200 ${
           isDragOver
@@ -237,7 +283,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
             </label>
 
             <div className="mt-3 sm:mt-4 text-xs text-gray-500 dark:text-gray-400 px-2">
-              Supported formats: {(process.env.NEXT_PUBLIC_SUPPORTED_FORMATS || '.pdf,.doc,.docx').replace(/\./g, '').toUpperCase()} • Max size: {Math.floor((parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '10485760') / (1024 * 1024)))}MB
+              Supported formats: PDF • Max size: {Math.floor((parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '10485760') / (1024 * 1024)))}MB
             </div>
           </>
         )}

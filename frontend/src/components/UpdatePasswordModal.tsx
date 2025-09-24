@@ -183,7 +183,7 @@ const UpdatePasswordModal: React.FC<UpdatePasswordModalProps> = ({
           <button
             onClick={handleClose}
             disabled={isSubmitting}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50"
             aria-label="Close modal"
           >
             <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />

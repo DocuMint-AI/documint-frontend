@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { CheckCircle, Calculator, RefreshCw } from 'lucide-react';
 
 interface MathCaptchaProps {
   onVerify: (isValid: boolean, token?: string) => void;
@@ -317,15 +318,25 @@ export const MathCaptcha: React.FC<MathCaptchaProps> = ({
         
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium">
-            {isVerified ? '✅ Verified' : '🔢 Math Challenge'}
+          <span className="text-sm font-medium flex items-center gap-2">
+            {isVerified ? (
+              <>
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                Verified
+              </>
+            ) : (
+              <>
+                <Calculator className="w-4 h-4 text-blue-500" />
+                Math Challenge
+              </>
+            )}
           </span>
           <button
             type="button"
             onClick={refreshProblem}
             disabled={isVerified}
             className={`
-              text-xs px-2 py-1 rounded transition-colors
+              text-xs px-2 py-1 rounded transition-colors flex items-center gap-1
               ${theme === 'dark'
                 ? 'text-gray-400 hover:text-gray-200 disabled:text-gray-600'
                 : 'text-gray-600 hover:text-gray-800 disabled:text-gray-400'
@@ -334,7 +345,8 @@ export const MathCaptcha: React.FC<MathCaptchaProps> = ({
             `}
             title="Generate new problem"
           >
-            🔄 New
+            <RefreshCw className="w-3 h-3" />
+            New
           </button>
         </div>
 

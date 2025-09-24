@@ -11,9 +11,10 @@ import { FileText, Upload, Settings, Brain, Menu, X, BookOpen } from 'lucide-rea
 
 interface LayoutProps {
   children: React.ReactNode;
+  hideThemeToggle?: boolean;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, hideThemeToggle = false }) => {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -111,14 +112,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               })}
               
               <div className="ml-2 pl-2 border-l border-gray-200 dark:border-gray-800 flex items-center gap-2">
-                <ThemeToggle />
+                {!hideThemeToggle && <ThemeToggle />}
                 {isAuthenticated && <ProfileDropdown />}
               </div>
             </nav>
 
             {/* Mobile menu button */}
             <div className="flex items-center gap-2 md:hidden">
-              <ThemeToggle />
+              {!hideThemeToggle && <ThemeToggle />}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors"

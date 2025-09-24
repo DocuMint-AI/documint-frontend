@@ -231,7 +231,7 @@ const QAPanel: React.FC<QAPanelProps> = ({ expanded, onExpand, onMinimize, canMi
           <div className="flex gap-2 justify-end sm:justify-start">
             <button
               onClick={handleVoiceInput}
-              className={`px-3 py-2.5 sm:py-2 rounded-lg transition-colors duration-200 flex items-center justify-center flex-shrink-0 ${
+              className={`px-3 py-2.5 sm:py-2 rounded-lg transition-colors duration-200 flex items-center justify-center flex-shrink-0 hidden ${
                 isRecording 
                   ? 'bg-red-500 text-white hover:bg-red-600' 
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-300 dark:hover:bg-gray-500'

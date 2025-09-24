@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   FileText, 
@@ -26,6 +26,29 @@ const satisfy = Satisfy({
 
 export default function HomePage() {
   const router = useRouter();
+
+  // Scroll reveal animation state
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-fade-in-up');
+          entry.target.classList.remove('opacity-0', 'translate-y-10');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all elements with scroll-reveal classes (including delay variations)
+    const elements = document.querySelectorAll('.scroll-reveal, .scroll-reveal-delay-1, .scroll-reveal-delay-2, .scroll-reveal-delay-3, .scroll-reveal-delay-4, .scroll-reveal-delay-5');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
 
   const features = [
     {
@@ -70,19 +93,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="stars absolute inset-0"></div>
-        <div className="twinkling absolute inset-0"></div>
-        <div className="clouds absolute inset-0"></div>
-      </div>
-
       {/* Content */}
       <div className="relative z-10">
         {/* Navigation */}
         <nav className="px-6 py-4 flex justify-between items-center backdrop-blur-sm bg-white/5 border-b border-white/10">
           <div className="flex items-center space-x-2">
-            <Sparkles className="w-8 h-8 text-blue-400" />
             <span className="text-2xl font-bold text-white font-documint">DocuMint AI</span>
           </div>
           <button
@@ -97,23 +112,23 @@ export default function HomePage() {
         {/* Hero Section */}
         <div className="px-6 py-20 text-center max-w-6xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-5xl md:text-7xl text-white mb-8 leading-loose">
-              <span className="font-normal">Transform</span> <span className="text-red-500 font-bold">Legal</span> <span className="font-normal">Documents</span>
+            <h1 className="text-5xl md:text-7xl text-white mb-8 leading-loose scroll-reveal">
+              <span className="font-normal">Transform</span> <span className="text-white font-normal">Legal</span> <span className="font-normal">Documents</span>
               <br />
               <div className="mt-4">
                 <span className="text-white font-normal">
-                  Into <span className={`${satisfy.className} text-red-500 text-6xl md:text-8xl leading-relaxed pb-4 px-2 inline-block`}>Intelligence</span>
+                  Into <span className="text-white font-normal">Intelligence</span>
                 </span>
               </div>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed scroll-reveal-delay-1">
               <span className="font-documint">DocuMint AI</span> revolutionizes document analysis with cutting-edge artificial intelligence. 
               Upload any contract or legal document and get instant insights, risk assessments, and expert recommendations.
             </p>
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 scroll-reveal-delay-2">
             <button
               onClick={() => router.push('/upload')}
               className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-lg font-semibold transition-all duration-200 flex items-center gap-3 shadow-2xl hover:shadow-blue-500/25 transform hover:scale-105"
@@ -169,7 +184,7 @@ export default function HomePage() {
 
         {/* Features Section */}
         <div className="px-6 py-20 max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 scroll-reveal">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Powered by Advanced AI
             </h2>
@@ -183,7 +198,7 @@ export default function HomePage() {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all duration-300 hover:transform hover:scale-105 group"
+                className={`bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 hover:border-white/20 transition-all duration-300 hover:transform hover:scale-105 group scroll-reveal${index > 0 ? `-delay-${Math.min(index, 5)}` : ''}`}
               >
                 <div className="text-blue-400 mb-4 group-hover:text-blue-300 transition-colors duration-300">
                   {feature.icon}
@@ -199,7 +214,7 @@ export default function HomePage() {
         <div className="px-6 py-20 bg-white/5 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div>
+              <div className="scroll-reveal-delay-1">
                 <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
                   Why Choose
                   <br />
@@ -262,7 +277,7 @@ export default function HomePage() {
 
         {/* CTA Section */}
         <div className="px-6 py-20 text-center">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto scroll-reveal">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Ready to Transform Your
               <br />
@@ -284,7 +299,6 @@ export default function HomePage() {
         <footer className="px-6 py-8 border-t border-white/10 bg-white/5 backdrop-blur-sm">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <Sparkles className="w-6 h-6 text-blue-400" />
               <span className="text-xl font-bold text-white font-documint">DocuMint AI</span>
             </div>
             <div className="text-gray-400 text-sm">
@@ -295,48 +309,6 @@ export default function HomePage() {
       </div>
 
       <style jsx>{`
-        .stars {
-          background-image: 
-            radial-gradient(2px 2px at 20px 30px, #eee, transparent),
-            radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
-            radial-gradient(1px 1px at 90px 40px, #fff, transparent),
-            radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
-            radial-gradient(2px 2px at 160px 30px, #ddd, transparent);
-          background-repeat: repeat;
-          background-size: 250px 120px;
-          animation: sparkle 4s linear infinite;
-          width: 300%;
-        }
-
-        .twinkling {
-          background-image: 
-            radial-gradient(1px 1px at 25px 25px, white, transparent),
-            radial-gradient(1px 1px at 75px 75px, rgba(255,255,255,0.8), transparent);
-          background-repeat: repeat;
-          background-size: 150px 150px;
-          animation: sparkle 5s linear infinite reverse;
-          width: 300%;
-        }
-
-        .clouds {
-          background-image: 
-            radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.2) 0%, transparent 50%),
-            radial-gradient(circle at 40% 80%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
-          background-size: 200% 200%;
-          animation: float 8s ease-in-out infinite;
-        }
-
-        @keyframes sparkle {
-          from { transform: translateX(0); }
-          to { transform: translateX(-250px); }
-        }
-
-        @keyframes float {
-          0%, 100% { transform: translateX(-10px) translateY(-10px); }
-          50% { transform: translateX(10px) translateY(10px); }
-        }
-
         /* Smooth transition for page navigation */
         body {
           transition: background 0.8s cubic-bezier(0.4, 0, 0.2, 1);

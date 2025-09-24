@@ -328,9 +328,10 @@ export default function WorkspacePage() {
   return (
     <AuthGuard>
       <Layout>
-      <div className="h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-gray-50 dark:bg-black font-sans flex flex-col overflow-hidden stars-bg">
+      <div className="h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)] bg-gray-50 dark:bg-black font-sans flex flex-col overflow-hidden relative">
+        
         {/* Header */}
-        <div className="flex-shrink-0 p-2 md:p-4 bg-gray-100/20 dark:bg-gray-800/20 border-b border-gray-200/30 dark:border-gray-700/30 shadow-sm">
+        <div className="flex-shrink-0 p-2 md:p-4 bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/30 dark:border-gray-700/30 shadow-sm relative z-30 backdrop-blur-md">
           <div className="min-w-0 ml-0 md:ml-2">
             <h1 className="text-sm md:text-xl font-bold text-gray-900 dark:text-white mb-1 truncate">
               Document Analysis Workspace
@@ -368,11 +369,18 @@ export default function WorkspacePage() {
         </div>
         
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative z-30">
+          {/* Animated gradient blobs - positioned within content area */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            {/* Primary blob - center of middle panel, moved 5-6cm higher */}
+            <div className="absolute top-[calc(50%-3rem)] left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-purple-500/60 via-indigo-500/60 to-blue-500/60 blur-3xl animate-float-blob opacity-100" style={{borderRadius: '45% 55% 65% 35% / 35% 45% 55% 65%'}}></div>
+            {/* Secondary blob - interacting with primary, moved 5-6cm higher */}
+            <div className="absolute top-[calc(50%-3rem)] left-1/3 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-indigo-600/50 via-purple-600/50 to-violet-600/50 blur-2xl animate-float-blob-reverse opacity-85" style={{borderRadius: '60% 40% 50% 50% / 40% 60% 40% 60%'}}></div>
+          </div>
           {/* Top panels area */}
           <div
             ref={containerRef}
-            className={`flex-1 bg-gray-100/50 dark:bg-gray-950 p-2 md:p-4 gap-1 md:gap-2 min-h-0 workspace-container ${
+            className={`flex-1 bg-gray-100/20 dark:bg-gray-950/60 p-2 md:p-4 gap-1 md:gap-2 min-h-0 workspace-container backdrop-blur-sm relative z-30 ${
               isMobile ? 'flex flex-col overflow-auto' : 'flex overflow-hidden'
             }`}
             style={!isMobile ? { 
