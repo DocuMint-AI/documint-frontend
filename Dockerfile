@@ -24,6 +24,10 @@ RUN npm ci --no-audit --no-fund
 # Copy source files
 COPY frontend/ ./
 
+# Set build-time environment variables for production
+ENV NEXT_PUBLIC_BACKEND_BASE_URL=""
+ENV NODE_ENV=production
+
 # Build Next.js app (with standalone output for production)
 RUN npm run build && npm prune --production
 
