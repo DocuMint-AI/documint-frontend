@@ -108,7 +108,7 @@ export default function HomePage() {
                 className="w-8 h-8 sm:w-10 sm:h-10"
               />
             </div>
-            <span className="text-lg sm:text-xl font-medium text-white leading-tight hidden xs:block" style={{fontFamily: "'TT Drugs Trial', sans-serif"}}>
+            <span className="text-lg sm:text-xl font-medium text-white leading-tight hidden sm:block" style={{fontFamily: "'TT Drugs Trial', sans-serif"}}>
               DocuMint AI
             </span>
           </div>

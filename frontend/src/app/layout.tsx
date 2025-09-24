@@ -25,7 +25,8 @@ export default function RootLayout({
         {/* Custom Font - TT Drugs Trial */}
         <link href="https://fonts.cdnfonts.com/css/tt-drugs-trial" rel="stylesheet" />
         
-        {/* Google Tag Manager */}
+  {/* Google Tag Manager */}
+  <link rel="icon" type="image/x-icon" href="/assets/documint-square-zoomed-white.ico" />
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
