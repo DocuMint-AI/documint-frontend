@@ -83,7 +83,7 @@ export default function HomePage() {
         <nav className="px-6 py-4 flex justify-between items-center backdrop-blur-sm bg-white/5 border-b border-white/10">
           <div className="flex items-center space-x-2">
             <Sparkles className="w-8 h-8 text-blue-400" />
-            <span className="text-2xl font-bold text-white">DocuMint AI</span>
+            <span className="text-2xl font-bold text-white font-documint">DocuMint AI</span>
           </div>
           <button
             onClick={() => router.push('/upload')}
@@ -107,7 +107,7 @@ export default function HomePage() {
               </div>
             </h1>
             <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed">
-              DocuMint AI revolutionizes document analysis with cutting-edge artificial intelligence. 
+              <span className="font-documint">DocuMint AI</span> revolutionizes document analysis with cutting-edge artificial intelligence. 
               Upload any contract or legal document and get instant insights, risk assessments, and expert recommendations.
             </p>
           </div>
@@ -203,7 +203,7 @@ export default function HomePage() {
                 <h2 className="text-4xl md:text-5xl font-bold text-white mb-8">
                   Why Choose
                   <br />
-                  <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent font-documint">
                     DocuMint AI?
                   </span>
                 </h2>
@@ -269,7 +269,7 @@ export default function HomePage() {
               Document Workflow?
             </h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Join thousands of professionals who trust DocuMint AI to streamline their document analysis and make smarter decisions.
+              Join thousands of professionals who trust <span className="font-documint">DocuMint AI</span> to streamline their document analysis and make smarter decisions.
             </p>
             <button
               onClick={() => router.push('/upload')}
@@ -285,10 +285,10 @@ export default function HomePage() {
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-2 mb-4 md:mb-0">
               <Sparkles className="w-6 h-6 text-blue-400" />
-              <span className="text-xl font-bold text-white">DocuMint AI</span>
+              <span className="text-xl font-bold text-white font-documint">DocuMint AI</span>
             </div>
             <div className="text-gray-400 text-sm">
-              © 2025 DocuMint AI. Transforming documents with intelligence.
+              © 2025 <span className="font-documint">DocuMint AI</span>. Transforming documents with intelligence.
             </div>
           </div>
         </footer>

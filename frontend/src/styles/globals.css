@@ -747,3 +747,8 @@ html {
     min-width: auto !important;
   }
 }
+
+/* DOCUMINT Branding Font Utility */
+.font-documint {
+  font-family: 'TT Drugs Trial', sans-serif;
+}

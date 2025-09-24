@@ -65,7 +65,7 @@ export default function SettingsPage() {
               </h1>
             </div>
             <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-              Configure your {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'} experience and API preferences.
+              Configure your <span className="font-documint">{process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'}</span> experience and API preferences.
             </p>
           </div>
 
@@ -194,12 +194,12 @@ export default function SettingsPage() {
 
             {/* About */}
             <div className="bg-white dark:bg-gray-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 font-documint">
                 About {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'}
               </h2>
               <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 <p>
-                  {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'} is a powerful legal document analysis platform built with Next.js 14, 
+                  <span className="font-documint">{process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'}</span> is a powerful legal document analysis platform built with Next.js 14, 
                   featuring AI-powered insights, risk assessment, and interactive Q&A capabilities.
                 </p>
                 <div className="grid gap-4 sm:gap-6 md:grid-cols-2 pt-3 sm:pt-4">

@@ -115,12 +115,24 @@ async def register(request: Request, user_data: UserCreate):
 @limiter.limit("10/minute")  # Limit login attempts to prevent brute force
 async def login(request: Request, user_data: UserLogin):
     """Login user and return access token"""
-    user = authenticate_user(user_data.username, user_data.password)
+    # First check if user exists
+    from .utils import get_user
+    user = get_user(user_data.username)
     
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Account does not exist, please register.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Now authenticate with password
+    authenticated_user = authenticate_user(user_data.username, user_data.password)
+    
+    if not authenticated_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
@@ -130,14 +142,14 @@ async def login(request: Request, user_data: UserLogin):
     # Create access token
     access_token_expires = timedelta(minutes=config.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user["username"], "session_uid": session_uid},
+        data={"sub": authenticated_user["username"], "session_uid": session_uid},
         expires_delta=access_token_expires
     )
     
     return Token(
         access_token=access_token,
         token_type="bearer",
-        user_id=user["user_id"],
+        user_id=authenticated_user["user_id"],
         session_uid=session_uid
     )
 

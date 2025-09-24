@@ -7,7 +7,7 @@ import ThemeToggle from './ThemeToggle';
 import ProfileDropdown from './ProfileDropdown';
 import ApiInitializer from './ApiInitializer';
 import { SessionManager } from '@/lib/auth';
-import { FileText, Upload, Settings, Brain, Menu, X } from 'lucide-react';
+import { FileText, Upload, Settings, Brain, Menu, X, BookOpen } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -58,6 +58,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigation = [
     { name: 'Upload', href: '/upload', icon: Upload },
     { name: 'Workspace', href: '/workspace', icon: Brain },
+    { name: 'Docs', href: '/docs', icon: BookOpen },
     { name: 'Settings', href: '/settings', icon: Settings },
   ];
 
@@ -78,7 +79,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <FileText className="w-5 md:w-6 h-5 md:h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex flex-col">
-                <span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white leading-tight">
+                <span className="text-lg md:text-xl font-bold text-gray-900 dark:text-white leading-tight font-documint">
                   {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400 hidden sm:block leading-tight">

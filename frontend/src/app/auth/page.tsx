@@ -204,7 +204,7 @@ export default function AuthPage() {
         <div className="panel-translucent rounded-xl p-8 panel-glow animate-fade-in">
           {/* Header */}
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 font-documint">
               {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'}
             </h1>
             <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
