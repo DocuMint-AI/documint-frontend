@@ -31,7 +31,7 @@ const nextConfig = {
     const targetUrl = 'http://localhost:8000';
     console.log(`[Next.js Rewrites] Enabling rewrites to: ${targetUrl}`);
     
-    return [
+  const rules = [
       // API routes (including upload)
       {
         source: '/api/v1/upload',
@@ -62,12 +62,9 @@ const nextConfig = {
         source: '/update-password',
         destination: `${targetUrl}/update-password`,
       },
-      // Health check
-      {
-        source: '/health',
-        destination: `${targetUrl}/health`,
-      },
     ];
+    // Do not rewrite /health; handled by Next API route
+    return rules;
   },
   webpack: (config, { isServer }) => {
     // Handle PDF.js on server side

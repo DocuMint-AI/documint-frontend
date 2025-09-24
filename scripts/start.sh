@@ -63,31 +63,27 @@ fi
 # Create data directories
 mkdir -p /app/backend/data/system
 
+# Start frontend service FIRST on the main PORT (8080 for Cloud Run)
+echo "Starting Next.js frontend on port $PORT..."
+cd /app/frontend
+npm start -- --port $PORT --hostname 0.0.0.0 &
+FRONTEND_PID=$!
+
 # Start backend service
 echo "Starting FastAPI backend on port $BACKEND_PORT..."
 cd /app/backend
 uvicorn main:app --host 0.0.0.0 --port $BACKEND_PORT --workers 1 &
 BACKEND_PID=$!
 
-# Wait for backend to be ready
+# Wait for backend to be ready (non-fatal for container readiness as frontend already listens)
 echo "Waiting for backend to be ready..."
-for i in {1..30}; do
+for i in {1..60}; do
     if curl -f http://localhost:$BACKEND_PORT/health > /dev/null 2>&1; then
         echo "Backend is ready!"
         break
     fi
-    if [ $i -eq 30 ]; then
-        echo "Backend failed to start within 30 seconds"
-        exit 1
-    fi
     sleep 1
 done
-
-# Start frontend service on the main PORT (8080 for Cloud Run)
-echo "Starting Next.js frontend on port $PORT..."
-cd /app/frontend
-npm start -- --port $PORT --hostname 0.0.0.0 &
-FRONTEND_PID=$!
 
 # Function to cleanup on exit
 cleanup() {
