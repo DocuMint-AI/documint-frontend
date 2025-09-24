@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import PageLoader from '@/components/PageLoader';
 import AuthGuard from '@/components/AuthGuard';
 import { checkBackendHealth } from '@/lib/api';
-import { Settings as SettingsIcon, Server, Info, Trash2, CheckCircle, XCircle, Loader2, BookOpen } from 'lucide-react';
+import { Settings as SettingsIcon, Server, Info, Trash2, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [backendHealth, setBackendHealth] = useState<'checking' | 'healthy' | 'unhealthy' | null>(null);
   const [mockMode, setMockMode] = useState(false);
@@ -194,26 +192,40 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Documentation */}
+            {/* About */}
             <div className="bg-white dark:bg-gray-950 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 sm:p-6">
               <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                Documentation & Help
+                About {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'}
               </h2>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-4 sm:mb-6">
-                Learn more about {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'} features, technical specifications, and roadmap.
-              </p>
-
-              <div className="space-y-3 sm:space-y-4">
-                <button
-                  onClick={() => router.push('/docs')}
-                  className="flex items-center gap-2 px-4 py-2.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center sm:justify-start text-sm sm:text-base"
-                >
-                  <BookOpen className="w-4 h-4 flex-shrink-0" />
-                  View Documentation
-                </button>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  Access comprehensive guides, feature specifications, and development roadmap.
+              <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                <p>
+                  {process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'} is a powerful legal document analysis platform built with Next.js 14, 
+                  featuring AI-powered insights, risk assessment, and interactive Q&A capabilities.
                 </p>
+                <div className="grid gap-4 sm:gap-6 md:grid-cols-2 pt-3 sm:pt-4">
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm sm:text-base">
+                      Frontend Technologies
+                    </h4>
+                    <ul className="space-y-1 text-xs sm:text-sm">
+                      <li>• Next.js 14 with App Router</li>
+                      <li>• React 18 with TypeScript</li>
+                      <li>• Tailwind CSS for styling</li>
+                      <li>• Lucide React for icons</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2 text-sm sm:text-base">
+                      Key Features
+                    </h4>
+                    <ul className="space-y-1 text-xs sm:text-sm">
+                      <li>• AI-powered document analysis</li>
+                      <li>• Risk and compliance scoring</li>
+                      <li>• Interactive Q&A assistant</li>
+                      <li>• Responsive panel layout</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -48,14 +48,14 @@ export interface RegisterResponse extends AuthResponse {
 class BackendConfig {
   private static getEnvVar(key: string, fallback?: string): string {
     const value = process.env[key];
-    if (value === undefined && fallback === undefined) {
+    if (!value && !fallback) {
       throw new Error(`Environment variable ${key} is not defined`);
     }
-    return value !== undefined ? value : fallback || '';
+    return value || fallback || '';
   }
 
   static get baseURL(): string {
-    return this.getEnvVar('NEXT_PUBLIC_BACKEND_BASE_URL', '');
+    return this.getEnvVar('NEXT_PUBLIC_BACKEND_BASE_URL', 'http://localhost:8000');
   }
 
   static get protocol(): string {
@@ -71,17 +71,35 @@ class BackendConfig {
   }
 
   static buildURL(endpoint: string): string {
-    // Get baseURL directly
+    // Check if any backend environment variables are set
     const base = this.baseURL;
+    const protocol = process.env.NEXT_PUBLIC_BACKEND_PROTOCOL;
+    const host = process.env.NEXT_PUBLIC_BACKEND_HOST;
+    const port = process.env.NEXT_PUBLIC_BACKEND_PORT;
     
-    // If baseURL is empty, use relative URLs (for Next.js proxy)
-    if (!base || base === '' || base === 'undefined') {
+    // If no backend variables are set, use relative URLs (for Next.js proxy)
+    if (!base && !protocol && !host && !port) {
       return endpoint;
     }
     
-    // Use baseURL if available, otherwise construct from parts
-    const fullBase = base || `${this.protocol}://${this.host}:${this.port}`;
-    return `${fullBase}${endpoint}`;
+    // If baseURL is explicitly empty, use relative URLs
+    if (base === '' || base === 'undefined') {
+      return endpoint;
+    }
+    
+    // If we have a complete baseURL, use it
+    if (base && base !== 'http://localhost:8000') {
+      return `${base}${endpoint}`;
+    }
+    
+    // For localhost development or when explicitly set to localhost, use relative URLs in production
+    if (process.env.NODE_ENV === 'production') {
+      return endpoint;
+    }
+    
+    // Default fallback for development
+    const fallbackBase = base || `${this.protocol}://${this.host}:${this.port}`;
+    return `${fallbackBase}${endpoint}`;
   }
 
   // Endpoint getters

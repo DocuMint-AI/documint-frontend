@@ -27,13 +27,11 @@ const nextConfig = {
       return [];
     }
     
-    // For production/container deployment, proxy to internal backend
-    // Use environment variable or fallback to default port
-    const backendPort = process.env.BACKEND_PORT || process.env.NEXT_PUBLIC_BACKEND_PORT || '8000';
-    const targetUrl = `http://localhost:${backendPort}`;
+    // For production/container deployment, proxy to internal backend on port 8000
+    const targetUrl = 'http://localhost:8000';
     console.log(`[Next.js Rewrites] Enabling rewrites to: ${targetUrl}`);
     
-  const rules = [
+    return [
       // API routes (including upload)
       {
         source: '/api/v1/upload',
@@ -64,9 +62,12 @@ const nextConfig = {
         source: '/update-password',
         destination: `${targetUrl}/update-password`,
       },
+      // Health check
+      {
+        source: '/health',
+        destination: `${targetUrl}/health`,
+      },
     ];
-    // Do not rewrite /health; handled by Next API route
-    return rules;
   },
   webpack: (config, { isServer }) => {
     // Handle PDF.js on server side

@@ -63,19 +63,8 @@ class Config:
     # CORS settings
     @property
     def ALLOWED_ORIGINS(self):
-        origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,https://documint-ai-142203089299.asia-south1.run.app")
-        origins = [origin.strip() for origin in origins_env.split(",")]
-        
-        # Handle wildcard patterns for Cloud Run
-        processed_origins = []
-        for origin in origins:
-            if "*.run.app" in origin:
-                # For wildcard, we'll handle this in the CORS middleware
-                processed_origins.append("https://documint-ai-142203089299.asia-south1.run.app")
-            else:
-                processed_origins.append(origin)
-        
-        return processed_origins
+        origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000")
+        return [origin.strip() for origin in origins_env.split(",")]
 
 # Global config instance
 config = Config()

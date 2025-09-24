@@ -1,28 +1,14 @@
 import '../styles/globals.css'
 import type { Metadata } from 'next'
-import { Barlow } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/context/ThemeContext'
 import CustomCursor from '@/components/CustomCursor'
 
-const barlow = Barlow({ 
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700']
-})
+const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: `${process.env.NEXT_PUBLIC_APP_NAME || 'DocuMint AI'} - Legal Document Analysis`,
   description: 'AI-powered legal document analysis and insights platform',
-  icons: {
-    icon: [
-      {
-        url: '/assets/documint-square-zoomed-white.ico',
-        sizes: 'any',
-        type: 'image/x-icon',
-      },
-    ],
-    shortcut: '/assets/documint-square-zoomed-white.ico',
-    apple: '/assets/documint-square-zoomed-white.ico',
-  },
 }
 
 export default function RootLayout({
@@ -33,11 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Custom Font - TT Drugs Trial */}
-        <link href="https://fonts.cdnfonts.com/css/tt-drugs-trial" rel="stylesheet" />
-        
-  {/* Google Tag Manager */}
-  <link rel="icon" type="image/x-icon" href="/assets/documint-square-zoomed-white.ico" />
+        {/* Google Tag Manager */}
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -62,7 +44,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${barlow.className} transition-all duration-700 ease-in-out`}>
+      <body className={`${inter.className} transition-all duration-700 ease-in-out`}>
         {/* Google Tag Manager (noscript) */}
         <noscript>
           <iframe

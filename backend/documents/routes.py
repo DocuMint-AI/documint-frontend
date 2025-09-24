@@ -3,7 +3,6 @@ Document handling routes for upload, processing, and AI analysis
 """
 
 import os
-import logging
 import tempfile
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, status, Request
 from pydantic import BaseModel
@@ -18,7 +17,7 @@ from documents.parser import DocumentParser
 from documents.storage import DocumentStorage
 from ai.dynamic_gemini_client import DynamicGeminiClient
 from utils.response import success_response, error_response
-from utils.errors import DocumentError, AIServiceError, AuthenticationError, FileValidationError
+from utils.errors import DocumentError, AIServiceError
 from config import config
 
 # Initialize rate limiter
@@ -42,7 +41,6 @@ class DocumentUploadResponse(BaseModel):
 
 
 documents_router = APIRouter()
-logger = logging.getLogger(__name__)
 
 
 @documents_router.post("/upload", response_model=DocumentUploadResponse)
@@ -56,20 +54,23 @@ async def upload_document(
     try:
         # Validate file size
         if hasattr(file, 'size') and file.size and file.size > config.MAX_FILE_SIZE:
-            raise FileValidationError(
-                f"File too large. Maximum size is {config.MAX_FILE_SIZE} bytes",
-                "FILE_TOO_LARGE"
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"File too large. Maximum size is {config.MAX_FILE_SIZE} bytes"
             )
         
         # Check file extension
         if not file.filename:
-            raise FileValidationError("No filename provided", "FILENAME_MISSING")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No filename provided"
+            )
         
         file_extension = DocumentParser.get_file_extension(file.filename)
         if file_extension not in config.ALLOWED_EXTENSIONS:
-            raise FileValidationError(
-                f"File type '{file_extension}' not supported. Allowed types: {', '.join(config.ALLOWED_EXTENSIONS)}",
-                "UNSUPPORTED_FILE_TYPE"
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"File type '{file_extension}' not supported"
             )
         
         # Get user session info (assume latest session for now)
@@ -77,7 +78,10 @@ async def upload_document(
         session_uid = max(current_user["sessions"].keys()) if current_user["sessions"] else None
         
         if not session_uid:
-            raise AuthenticationError("No active session found", "NO_ACTIVE_SESSION")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No active session found"
+            )
         
         # Save uploaded file to temporary location first
         with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_extension}") as temp_file:
@@ -100,44 +104,25 @@ async def upload_document(
             )
             
             # If OCR is needed and we have Vision API configured, process it
-            if needs_ocr:
-                logger.info(f"Document {doc_id} requires OCR processing. Vision API configured: {bool(config.GOOGLE_CLOUD_VISION_CREDENTIALS)}")
-                
-                if config.GOOGLE_CLOUD_VISION_CREDENTIALS:
-                    try:
-                        logger.info(f"Starting OCR processing for document {doc_id}")
-                        from ai.vision_ocr import VisionOCR
-                        vision_client = VisionOCR()
-                        logger.info(f"Vision client initialized successfully for document {doc_id}")
-                        
-                        ocr_text, ocr_data = vision_client.extract_text(saved_file_path)
-                        logger.info(f"OCR completed for document {doc_id}. Text length: {len(ocr_text)} characters")
-                        
-                        # Save OCR results
-                        DocumentStorage.save_ocr_results(
-                            user_id, session_uid, doc_id, ocr_text, ocr_data
-                        )
-                        logger.info(f"OCR results saved for document {doc_id}")
-                        
-                        # Update metadata to indicate OCR was processed
-                        metadata["ocr_processed"] = True
-                        metadata["ocr_text_length"] = len(ocr_text)
-                        metadata["ocr_status"] = "success"
-                        logger.info(f"OCR processing completed successfully for document {doc_id}")
-                        
-                    except Exception as e:
-                        # OCR failed, but document upload succeeded
-                        logger.error(f"OCR processing failed for document {doc_id}: {str(e)}", exc_info=True)
-                        metadata["ocr_error"] = str(e)
-                        metadata["ocr_status"] = "failed"
-                        metadata["ocr_fallback_message"] = "OCR processing failed. We are working on fixing this issue. Your document was uploaded successfully but text extraction may be limited."
-                        needs_ocr = True  # Still needs OCR
-                        logger.warning(f"Document {doc_id} uploaded successfully but OCR failed. User will see fallback message.")
-                else:
-                    logger.warning(f"Document {doc_id} requires OCR but Vision API credentials not configured")
-                    metadata["ocr_status"] = "not_configured"
-                    metadata["ocr_fallback_message"] = "OCR service is currently being configured. We are working on enabling text extraction for image-based documents."
-                    logger.info(f"OCR not available for document {doc_id} - credentials not configured")
+            if needs_ocr and config.GOOGLE_CLOUD_VISION_CREDENTIALS:
+                try:
+                    from ai.vision_ocr import VisionOCR
+                    vision_client = VisionOCR()
+                    ocr_text, ocr_data = vision_client.extract_text(saved_file_path)
+                    
+                    # Save OCR results
+                    DocumentStorage.save_ocr_results(
+                        user_id, session_uid, doc_id, ocr_text, ocr_data
+                    )
+                    
+                    # Update metadata to indicate OCR was processed
+                    metadata["ocr_processed"] = True
+                    metadata["ocr_text_length"] = len(ocr_text)
+                    
+                except Exception as e:
+                    # OCR failed, but document upload succeeded
+                    metadata["ocr_error"] = str(e)
+                    needs_ocr = True  # Still needs OCR
             
             return DocumentUploadResponse(
                 doc_id=doc_id,
@@ -150,25 +135,16 @@ async def upload_document(
             # Clean up temporary file
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path)
-    except FileValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except AuthenticationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e)
-        )
+    
     except DocumentError as e:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error uploading document: {str(e)}"
+            detail=f"Error processing document: {str(e)}"
         )
 
 
@@ -180,26 +156,30 @@ async def process_document(
     current_user: dict = Depends(get_current_user)
 ):
     """Process document with Gemini AI for insights and analysis"""
-    logger.info(f"Processing document request for {request_data.doc_id}")
     try:
         user_id = current_user["user_id"]
         session_uid = max(current_user["sessions"].keys()) if current_user["sessions"] else None
         
         if not session_uid:
-            raise AuthenticationError("No active session found", "NO_ACTIVE_SESSION")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No active session found"
+            )
         
         # Get document text
-        logger.info(f"Retrieving document text for processing {request_data.doc_id}")
         document_text = DocumentStorage.get_document_text(user_id, session_uid, request_data.doc_id)
         if not document_text:
-            logger.error(f"Document {request_data.doc_id} not found or no text content available for processing")
-            raise DocumentError("Document not found or no text content available", "DOCUMENT_NOT_FOUND")
-        
-        logger.info(f"Document {request_data.doc_id} text retrieved successfully for processing. Length: {len(document_text)} characters")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found or no text content available"
+            )
         
         # Check if Gemini API is configured
         if not config.GEMINI_API_KEY:
-            raise AIServiceError("AI analysis service is currently unavailable", "GEMINI_API_KEY_MISSING")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Gemini API not configured"
+            )
         
         # Process with Dynamic Gemini Client
         gemini_client = DynamicGeminiClient()
@@ -209,20 +189,11 @@ async def process_document(
         DocumentStorage.save_analysis_results(user_id, session_uid, analysis_result)
         
         return success_response(analysis_result, "Document analysis completed")
-    except AuthenticationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e)
-        )
-    except DocumentError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+    
     except AIServiceError as e:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(e)
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"AI service error: {str(e)}"
         )
     except Exception as e:
         raise HTTPException(
@@ -239,26 +210,30 @@ async def document_qa(
     current_user: dict = Depends(get_current_user)
 ):
     """Answer questions about a document using Gemini AI"""
-    logger.info(f"Q&A request for document {request_data.doc_id} with query: {request_data.query[:100]}...")
     try:
         user_id = current_user["user_id"]
         session_uid = max(current_user["sessions"].keys()) if current_user["sessions"] else None
         
         if not session_uid:
-            raise AuthenticationError("No active session found", "NO_ACTIVE_SESSION")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No active session found"
+            )
         
         # Get document text
-        logger.info(f"Retrieving document text for Q&A on {request_data.doc_id}")
         document_text = DocumentStorage.get_document_text(user_id, session_uid, request_data.doc_id)
         if not document_text:
-            logger.error(f"Document {request_data.doc_id} not found for Q&A or no text content available")
-            raise DocumentError("Document not found or no text content available", "DOCUMENT_NOT_FOUND")
-        
-        logger.info(f"Document {request_data.doc_id} text retrieved for Q&A. Length: {len(document_text)} characters")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found or no text content available"
+            )
         
         # Check if Gemini API is configured
         if not config.GEMINI_API_KEY:
-            raise AIServiceError("AI analysis service is currently unavailable", "GEMINI_API_KEY_MISSING")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Gemini API not configured"
+            )
         
         # Process Q&A with Dynamic Gemini Client
         gemini_client = DynamicGeminiClient()
@@ -267,25 +242,16 @@ async def document_qa(
         )
         
         return success_response(qa_result, "Question answered successfully")
-    except AuthenticationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e)
-        )
-    except DocumentError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+    
     except AIServiceError as e:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(e)
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"AI service error: {str(e)}"
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error answering question: {str(e)}"
+            detail=f"Error processing question: {str(e)}"
         )
 
 

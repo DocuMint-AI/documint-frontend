@@ -8,8 +8,6 @@ export default function CustomCursor() {
   const [isHovering, setIsHovering] = useState(false)
   const [isClicking, setIsClicking] = useState(false)
   const [isTextCursor, setIsTextCursor] = useState(false)
-  const [isHeadingHover, setIsHeadingHover] = useState(false)
-  const [isLogoHover, setIsLogoHover] = useState(false)
 
   useEffect(() => {
     const updatePosition = (e: MouseEvent) => {
@@ -37,42 +35,6 @@ export default function CustomCursor() {
       ) {
         setIsTextCursor(true)
         setIsHovering(false)
-        setIsHeadingHover(false)
-        setIsLogoHover(false)
-        return
-      }
-      
-      // Check for logo elements (with data-cursor-logo attribute)
-      if (
-        target.hasAttribute('data-cursor-logo') ||
-        target.closest('[data-cursor-logo]')
-      ) {
-        setIsLogoHover(true)
-        setIsHovering(false)
-        setIsHeadingHover(false)
-        setIsTextCursor(false)
-        return
-      }
-      
-      // Check for headings (h1, h2, h3, h4, h5, h6)
-      if (
-        target.tagName === 'H1' ||
-        target.tagName === 'H2' ||
-        target.tagName === 'H3' ||
-        target.tagName === 'H4' ||
-        target.tagName === 'H5' ||
-        target.tagName === 'H6' ||
-        target.closest('h1') ||
-        target.closest('h2') ||
-        target.closest('h3') ||
-        target.closest('h4') ||
-        target.closest('h5') ||
-        target.closest('h6')
-      ) {
-        setIsHeadingHover(true)
-        setIsHovering(false)
-        setIsTextCursor(false)
-        setIsLogoHover(false)
         return
       }
       
@@ -90,13 +52,9 @@ export default function CustomCursor() {
       ) {
         setIsHovering(true)
         setIsTextCursor(false)
-        setIsHeadingHover(false)
-        setIsLogoHover(false)
       } else {
         setIsHovering(false)
         setIsTextCursor(false)
-        setIsHeadingHover(false)
-        setIsLogoHover(false)
       }
     }
 
@@ -143,7 +101,7 @@ export default function CustomCursor() {
 
   return (
     <div
-      className={`custom-cursor ${isHovering ? 'hover' : ''} ${isClicking ? 'click' : ''} ${isTextCursor ? 'text' : ''} ${isHeadingHover || isLogoHover ? 'heading' : ''}`}
+      className={`custom-cursor ${isHovering ? 'hover' : ''} ${isClicking ? 'click' : ''} ${isTextCursor ? 'text' : ''}`}
       style={{
         left: position.x,
         top: position.y,
