@@ -44,7 +44,7 @@ export interface RegisterResponse extends AuthResponse {
   };
 }
 
-// Environment configuration helper
+// Environment configuration helper 
 class BackendConfig {
   private static getEnvVar(key: string, fallback?: string): string {
     const value = process.env[key];
