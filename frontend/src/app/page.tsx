@@ -137,7 +137,7 @@ export default function HomePage() {
               Analyze Your First Document
             </button>
             <button
-              onClick={() => window.open('https://drive.google.com/file/d/1UKsoER7ctnFBYUz94O5X_XbtBKEIyL4i/view?usp=sharing', '_blank')}
+              onClick={() => window.open('https://drive.google.com/file/d/1a__lcb3Ju-OXons_hp9Ldj4JiX_a0cYe/view?usp=sharing', '_blank')}
               className="px-8 py-4 bg-white/10 hover:bg-white/20 text-white rounded-xl text-lg font-semibold transition-all duration-200 backdrop-blur-sm border border-white/20 hover:border-white/30"
             >
               View Demo

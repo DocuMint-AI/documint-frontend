@@ -3,7 +3,8 @@
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Upload, FileText, CheckCircle, AlertCircle, Loader2, Lightbulb } from 'lucide-react';
-import { uploadDocument, processDocument, getDocumentText } from '@/lib/api';
+import { uploadDocument, processDocument, getDocumentText, getApiMode } from '@/lib/api';
+import { extractDocumentText } from '@/lib/documentExtractor';
 
 interface DocumentUploadProps {
   onUploadComplete?: (documentId: string) => void;
@@ -47,6 +48,36 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
     }
   }, []);
 
+  const processDocumentWithRetry = async (documentId: string, maxRetries: number = 3) => {
+    let lastError;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Processing document attempt ${attempt}/${maxRetries}`);
+        const result = await processDocument(documentId);
+        return result;
+      } catch (error: any) {
+        console.log(`Attempt ${attempt} failed:`, error);
+        lastError = error;
+        
+        // If it's a 429 error, wait before retrying
+        if (error.message?.includes('429') && attempt < maxRetries) {
+          const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
+          console.log(`Rate limited, waiting ${delay}ms before retry...`);
+          setStatusMessage(`Rate limited, retrying in ${delay/1000}s...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else if (attempt < maxRetries) {
+          // For other errors, wait 1 second before retry
+          console.log('Retrying in 1 second...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+    
+    // If all retries failed, return the last error
+    throw lastError;
+  };
+
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -60,27 +91,14 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
     setUploadedFile(file);
 
     try {
+      const apiMode = await getApiMode();
       const uploadResult = await uploadDocument(file);
       
       if (uploadResult.success) {
         setUploadStatus('success');
         setStatusMessage(`Successfully uploaded ${uploadResult.filename}`);
         
-        // Fetch document text from backend - TEMPORARILY DISABLED
-        // const textResult = await getDocumentText(uploadResult.documentId);
-        console.log('Vision OCR backend call temporarily disabled due to bug. Document ID:', uploadResult.documentId);
-        
-        // Simulate failed text extraction to trigger OCR warning
-        const textResult = { 
-          success: false, 
-          text: '', 
-          error: 'Vision OCR temporarily disabled',
-          filename: uploadResult.filename,
-          word_count: 0,
-          page_count: 0
-        };
-        
-        // Start processing the document
+        // Set processing flag IMMEDIATELY to prevent button flicker
         setIsProcessing(true);
         
         // Set processing flag for workspace loading state
@@ -88,7 +106,55 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
           localStorage.setItem('processingDocument', 'true');
         }
         
-        const processResult = await processDocument(uploadResult.documentId);
+        // Extract text immediately using client-side extraction for real backend
+        let textResult;
+        if (apiMode === 'real') {
+          try {
+            console.log('Extracting text immediately using client-side extraction...');
+            const extractedDoc = await extractDocumentText(file);
+            textResult = {
+              success: true,
+              text: extractedDoc.text,
+              word_count: extractedDoc.wordCount,
+              page_count: extractedDoc.pageCount,
+              filename: extractedDoc.filename
+            };
+            setStatusMessage(`Text extracted: ${extractedDoc.wordCount} words`);
+          } catch (error) {
+            console.log('Client-side text extraction failed:', error);
+            textResult = { 
+              success: false, 
+              text: '', 
+              error: 'Client-side text extraction failed',
+              filename: uploadResult.filename,
+              word_count: 0,
+              page_count: 0
+            };
+          }
+        } else {
+          // For mock mode, use the extracted document from uploadResult
+          if (uploadResult.extractedDoc) {
+            textResult = {
+              success: true,
+              text: uploadResult.extractedDoc.text,
+              word_count: uploadResult.extractedDoc.wordCount,
+              page_count: uploadResult.extractedDoc.pageCount,
+              filename: uploadResult.extractedDoc.filename
+            };
+          } else {
+            textResult = { 
+              success: false, 
+              text: '', 
+              error: 'No text extracted',
+              filename: uploadResult.filename,
+              word_count: 0,
+              page_count: 0
+            };
+          }
+        }
+        
+        // Process document with retry for 429 errors
+        const processResult = await processDocumentWithRetry(uploadResult.documentId);
         
         if (processResult.success) {
           setStatusMessage(`Document processed successfully. Redirecting to workspace...`);
@@ -117,7 +183,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
               }));
             } else {
               setShowOcrWarning(true);
-              console.log('OCR Warning: Vision OCR backend call failed or disabled:', textResult.error || 'No text extracted');
+              console.log('OCR Warning: Text extraction failed:', textResult.error || 'No text extracted');
               // Store empty document data when OCR fails
               localStorage.setItem(`document_${uploadResult.documentId}`, JSON.stringify({
                 text: '',
@@ -288,8 +354,8 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({ onUploadComplete }) => 
           </>
         )}
 
-        {/* Actions for completed upload */}
-        {(uploadStatus === 'success' || uploadStatus === 'error') && !isProcessing && (
+        // Actions for completed upload
+        {(uploadStatus === 'success' || uploadStatus === 'error') && !isProcessing && !isUploading && (
           <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center w-full max-w-xs">
             <button
               onClick={handleReset}

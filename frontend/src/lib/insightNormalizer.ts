@@ -79,23 +79,43 @@ export const normalizeInsight = (raw: any): NormalizedInsight => {
       raw.level || raw.intensity || raw.severity || raw.priority || raw.importance || 'medium'
     );
     
-    // Extract text with multiple fallbacks
-    const text = String(
+    // Extract text with multiple fallbacks and clean markdown
+    let text = String(
       raw.description || raw.text || raw.message || raw.content || 'No description available'
     ).trim();
+    
+    // Remove markdown formatting
+    text = text
+      .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove **bold**
+      .replace(/\*([^*]+)\*/g, '$1')      // Remove *italic*
+      .replace(/__([^_]+)__/g, '$1')      // Remove __bold__
+      .replace(/_([^_]+)_/g, '$1')        // Remove _italic_
+      .replace(/^\*\*\s*/, '')            // Remove leading **
+      .replace(/\s*\*\*$/, '')            // Remove trailing **
+      .trim();
     
     // Auto-assign color based on type and level
     const color = assignColor(type, level);
     
-    // Extract recommendation
-    const recommendation = raw.recommendation || raw.suggestion || raw.advice || undefined;
+    // Extract recommendation and clean markdown
+    let recommendation = raw.recommendation || raw.suggestion || raw.advice || undefined;
+    if (recommendation) {
+      recommendation = String(recommendation)
+        .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove **bold**
+        .replace(/\*([^*]+)\*/g, '$1')      // Remove *italic*
+        .replace(/__([^_]+)__/g, '$1')      // Remove __bold__
+        .replace(/_([^_]+)_/g, '$1')        // Remove _italic_
+        .replace(/^\*\*\s*/, '')            // Remove leading **
+        .replace(/\s*\*\*$/, '')            // Remove trailing **
+        .trim();
+    }
     
     return {
       type,
       level,
       text: text || 'No description available',
       color,
-      recommendation: recommendation ? String(recommendation).trim() : undefined
+      recommendation
     };
   } catch (error) {
     console.warn('Error normalizing insight:', error, raw);
@@ -294,8 +314,14 @@ export const sanitizeText = (text: any): string => {
   
   return text
     .trim()
-    .replace(/\s+/g, ' ') // Replace multiple whitespace with single space
-    .substring(0, 500); // Limit length to prevent UI issues
+    .replace(/\*\*([^*]+)\*\*/g, '$1')    // Remove **bold**
+    .replace(/\*([^*]+)\*/g, '$1')        // Remove *italic*
+    .replace(/__([^_]+)__/g, '$1')        // Remove __bold__
+    .replace(/_([^_]+)_/g, '$1')          // Remove _italic_
+    .replace(/^\*\*\s*/, '')              // Remove leading **
+    .replace(/\s*\*\*$/, '')              // Remove trailing **
+    .replace(/\s+/g, ' ')                 // Replace multiple whitespace with single space
+    .substring(0, 500);                   // Limit length to prevent UI issues
 };
 
 /**
