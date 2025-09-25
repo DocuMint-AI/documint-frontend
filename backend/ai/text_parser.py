@@ -151,6 +151,13 @@ class InsightTextParser:
         if not description:
             return None
         
+        # Clean up description - remove markdown formatting
+        description = re.sub(r'\*\*([^*]+)\*\*', r'\1', description)
+        description = re.sub(r'\*([^*]+)\*', r'\1', description)
+        description = re.sub(r'__([^_]+)__', r'\1', description)
+        description = re.sub(r'_([^_]+)_', r'\1', description)
+        description = description.strip()
+        
         # Extract intensity
         intensity_match = self.patterns['intensity'].search(block)
         intensity = intensity_match.group(1).title() if intensity_match else self._infer_intensity(description)
@@ -158,6 +165,13 @@ class InsightTextParser:
         # Extract recommendation
         rec_match = self.patterns['recommendation'].search(block)
         recommendation = rec_match.group(1).strip() if rec_match else "Consider reviewing this item carefully."
+        # Also clean markdown from recommendation
+        if recommendation:
+            recommendation = re.sub(r'\*\*([^*]+)\*\*', r'\1', recommendation)
+            recommendation = re.sub(r'\*([^*]+)\*', r'\1', recommendation)
+            recommendation = re.sub(r'__([^_]+)__', r'\1', recommendation)
+            recommendation = re.sub(r'_([^_]+)_', r'\1', recommendation)
+            recommendation = recommendation.strip()
         
         return ParsedInsight(
             type=insight_type,
@@ -199,8 +213,15 @@ class InsightTextParser:
         # Infer intensity
         intensity = self._infer_intensity(text)
         
-        # Clean up description
+        # Clean up description - remove markdown formatting
         description = text.strip()
+        # Remove markdown bold formatting
+        description = re.sub(r'\*\*([^*]+)\*\*', r'\1', description)
+        # Remove other markdown formatting
+        description = re.sub(r'\*([^*]+)\*', r'\1', description)
+        description = re.sub(r'__([^_]+)__', r'\1', description)
+        description = re.sub(r'_([^_]+)_', r'\1', description)
+        
         if description.endswith('.'):
             description = description[:-1]
         
@@ -281,4 +302,10 @@ class InsightTextParser:
                 content_lines.append(line)
         
         main_content = ' '.join(content_lines)
+        # Remove markdown formatting
+        main_content = re.sub(r'\*\*([^*]+)\*\*', r'\1', main_content)
+        main_content = re.sub(r'\*([^*]+)\*', r'\1', main_content)
+        main_content = re.sub(r'__([^_]+)__', r'\1', main_content)
+        main_content = re.sub(r'_([^_]+)_', r'\1', main_content)
+        
         return main_content[:200] + "..." if len(main_content) > 200 else main_content
